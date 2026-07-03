@@ -11,6 +11,7 @@ const columns = [
       { to: "/branches", label: "Branches" },
       { to: "/careers", label: "Careers" },
       { to: "/blog", label: "Insights" },
+      { to: "/admin", label: "Admin Portal" },
     ],
   },
   {

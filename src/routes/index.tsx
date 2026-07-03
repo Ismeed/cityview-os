@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import heroImg from "../assets/hero.jpg";
-import workshopImg from "../assets/workshop.jpg";
-import cngImg from "../assets/cng-detail.jpg";
-import kekeImg from "../assets/keke-fleet.jpg";
+import heroImg from "../assets/hero.png";
+import workshopImg from "../assets/workshop.png";
+import cngImg from "../assets/cng-detail.png";
+import kekeImg from "../assets/keke-fleet.png";
 import { SectionHeading, Eyebrow } from "../components/site/section";
 import { Counter } from "../components/site/counter";
 import {

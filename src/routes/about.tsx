@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHero, SectionHeading, Eyebrow } from "../components/site/section";
 import { Counter } from "../components/site/counter";
 import { ArrowRight, Target, Compass, Award } from "lucide-react";
-import cngImg from "../assets/cng-detail.jpg";
+import cngImg from "../assets/cng-detail.png";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -22,7 +22,30 @@ const timeline = [
   { y: "2020", t: "First CNG conversions", d: "We pioneer petrol-to-CNG conversion for commercial fleets in the region." },
   { y: "2022", t: "Keke Hire Purchase launched", d: "Empowering hundreds of drivers to own CNG-powered tricycles." },
   { y: "2024", t: "MUVA fleet platform", d: "We integrate MUVA Mobility to run intelligent, digitized fleet operations." },
-  { y: "2026", t: "West Africa expansion", d: "Gombe goes live. Kano, Kaduna and Bauchi are next." },
+  { y: "2026", t: "West Africa expansion", d: "Gombe goes live. Katsina head office expanded. Kano, Kaduna and Bauchi are next." },
+];
+
+const leaders = [
+  {
+    name: "Alhaji Mustapha Ibrahim",
+    role: "Founder & Managing Director",
+    bio: "Over 15 years of experience in transportation operations and strategic investments in Northern Nigeria.",
+  },
+  {
+    name: "Engr. Yusuf Bello",
+    role: "Head of CNG Engineering",
+    bio: "Certified automotive engineer specialized in alternative energy conversions with over 8 years in CNG systems.",
+  },
+  {
+    name: "Dr. Grace Olamide",
+    role: "Director of Fleet Operations",
+    bio: "Expert in transit logistics and smart mobility technologies, leading our integration with the MUVA platform.",
+  },
+  {
+    name: "Mariam Katsina",
+    role: "Head of Finance & Partnerships",
+    bio: "Ex-investment banker focused on sustainable growth, hire-purchase operations, and corporate partnerships.",
+  },
 ];
 
 function About() {
@@ -101,6 +124,25 @@ function About() {
                 </div>
                 <h3 className="font-display text-lg font-semibold text-foreground">{t.t}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{t.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* LEADERSHIP */}
+      <section className="bg-mist py-24 md:py-32">
+        <div className="container-x">
+          <SectionHeading eyebrow="Leadership" title="Driven by industry pioneers." description="Our team combines engineering excellence with local operational expertise to build Africa's clean energy mobility corridor." />
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {leaders.map((l) => (
+              <div key={l.name} className="hover-lift rounded-3xl border border-border bg-white p-6 shadow-soft">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald/10 text-forest-deep font-display font-semibold text-lg">
+                  {l.name.split(" ").map(n => n[0]).join("")}
+                </div>
+                <h3 className="mt-6 font-display text-xl font-semibold text-foreground">{l.name}</h3>
+                <div className="text-xs font-semibold uppercase tracking-wider text-emerald mt-1">{l.role}</div>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{l.bio}</p>
               </div>
             ))}
           </div>

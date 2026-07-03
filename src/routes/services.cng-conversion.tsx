@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHero, SectionHeading, Eyebrow } from "../components/site/section";
 import { CheckCircle2, ArrowRight } from "lucide-react";
-import cngImg from "../assets/cng-detail.jpg";
+import cngImg from "../assets/cng-detail.png";
 
 export const Route = createFileRoute("/services/cng-conversion")({
   head: () => ({
