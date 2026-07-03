@@ -32,10 +32,10 @@ const branches: Branch[] = [
     c: "Katsina", 
     tag: "Head office", 
     live: true, 
-    addr: "IBB Way, Katsina State, Nigeria", 
-    phone: "+234 803 123 4567",
+    addr: "No. 1 Nagogo Road Near Union Bank, GRA Katsina, Along Kofar Durbi Road.", 
+    phone: "09121266900 · 08039739252",
     hours: "Mon - Sat: 8:00 AM - 6:00 PM",
-    details: "Our primary hub housing the main CNG conversion bay, diagnostics center, and the administrative headquarters.",
+    details: "Our primary hub housing the main CNG conversion bay, diagnostics center, auto alignment, and key programming facilities.",
     x: 220, 
     y: 60 
   },

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHero, SectionHeading, Eyebrow } from "../components/site/section";
 import { useState } from "react";
-import { ArrowRight, Wrench, Gauge, Zap, Cog, Calendar, Clock, MapPin, CheckCircle, Send } from "lucide-react";
+import { ArrowRight, Wrench, Gauge, Zap, Cog, Calendar, Clock, MapPin, CheckCircle, Send, Key } from "lucide-react";
 import workshopImg from "../assets/workshop.png";
 
 export const Route = createFileRoute("/workshop")({
@@ -76,12 +76,10 @@ function Workshop() {
                 </p>
                 <div className="mt-8 grid gap-4 sm:grid-cols-2">
                   {[
-                    { i: Wrench, t: "Engine repairs" },
-                    { i: Gauge, t: "Vehicle diagnosis" },
-                    { i: Cog, t: "Suspension & steering" },
-                    { i: Zap, t: "Electrical repairs" },
-                    { i: Cog, t: "Transmission" },
-                    { i: Wrench, t: "General maintenance" },
+                    { i: Wrench, t: "CNG Conversion" },
+                    { i: Gauge, t: "Auto Diagnosis & Services" },
+                    { i: Cog, t: "Auto Alignment & Balancing" },
+                    { i: Key, t: "Key Services & Programing" },
                   ].map((s) => (
                     <div key={s.t} className="flex items-center gap-3 rounded-2xl border border-border bg-white p-4 shadow-soft">
                       <s.i className="h-5 w-5 text-emerald" />
@@ -143,10 +141,10 @@ function Workshop() {
                       onChange={handleInputChange}
                       className="w-full rounded-xl border border-border px-4 py-3 text-sm focus:outline-emerald bg-white"
                     >
-                      <option value="CNG Conversion Consultation">CNG Conversion Consultation</option>
-                      <option value="Vehicle Diagnostic Inspection">Vehicle Diagnostic Inspection</option>
-                      <option value="Routine Maintenance Check">Routine Maintenance Check</option>
-                      <option value="Engine / Mechanical Repairs">Engine / Mechanical Repairs</option>
+                      <option value="CNG Conversion">CNG Conversion</option>
+                      <option value="Auto Diagnosis & Services">Auto Diagnosis & Services</option>
+                      <option value="Auto Alignment & Balancing">Auto Alignment & Balancing</option>
+                      <option value="Key Services & Programing">Key Services & Programing</option>
                     </select>
                   </div>
                   <div>

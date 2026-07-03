@@ -49,13 +49,16 @@ export function SiteFooter() {
               engineering.
             </p>
             <div className="mt-8 space-y-3 text-sm">
-              <div className="flex items-center gap-3 text-white/80">
-                <MapPin className="h-4 w-4 text-emerald" />
-                Head Office — Katsina, Nigeria
+              <div className="flex items-start gap-3 text-white/80">
+                <MapPin className="h-4 w-4 text-emerald shrink-0 mt-1" />
+                <span>No. 1 Nagogo Road Near Union Bank, GRA Katsina, Along Kofar Durbi Road.</span>
               </div>
-              <div className="flex items-center gap-3 text-white/80">
-                <Phone className="h-4 w-4 text-emerald" />
-                +234 800 000 0000
+              <div className="flex items-start gap-3 text-white/80">
+                <Phone className="h-4 w-4 text-emerald shrink-0 mt-1" />
+                <div>
+                  <div>09121266900 · 08039739252</div>
+                  <div className="mt-0.5 text-xs text-white/60">08137564482 · 07035280901</div>
+                </div>
               </div>
               <div className="flex items-center gap-3 text-white/80">
                 <Mail className="h-4 w-4 text-emerald" />

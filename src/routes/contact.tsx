@@ -56,10 +56,10 @@ function Contact() {
             <h2 className="mt-5 font-display text-3xl font-semibold md:text-4xl">Prefer talking? So do we.</h2>
             <div className="mt-8 space-y-4">
               {[
-                { i: Phone, t: "Call us", v: "+234 800 000 0000" },
-                { i: MessageCircle, t: "WhatsApp", v: "+234 800 000 0000" },
+                { i: Phone, t: "Call us", v: "09121266900 · 08039739252" },
+                { i: MessageCircle, t: "WhatsApp", v: "09121266900" },
                 { i: Mail, t: "Email", v: "hello@cityviewcng.africa" },
-                { i: MapPin, t: "Head office", v: "IBB Way, Katsina, Nigeria" },
+                { i: MapPin, t: "Head office", v: "No. 1 Nagogo Road Near Union Bank, GRA Katsina, Along Kofar Durbi Road." },
                 { i: Clock, t: "Office hours", v: "Mon–Sat · 8:00–18:00" },
               ].map((c) => (
                 <div key={c.t} className="flex items-center gap-4 rounded-2xl border border-border bg-white p-5">

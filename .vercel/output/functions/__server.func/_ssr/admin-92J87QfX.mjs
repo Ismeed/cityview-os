@@ -1,6 +1,6 @@
 import { r as __toESM } from "../_runtime.mjs";
 import { n as require_react, r as require_jsx_runtime } from "../_libs/react+tanstack__react-query.mjs";
-import { D as FileText, L as Check, S as LayoutDashboard, c as Trash2, g as MessageSquare, k as Database, m as Plus, n as X, r as Wrench } from "../_libs/lucide-react.mjs";
+import { D as FileText, L as Check, h as MessageSquare, k as Database, n as Wrench, p as Plus, s as Trash2, t as X, x as LayoutDashboard } from "../_libs/lucide-react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/admin-92J87QfX.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();

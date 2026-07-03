@@ -1,1 +1,0 @@
-var e=`/assets/workshop-jbhoYBF7.png`;export{e as t};

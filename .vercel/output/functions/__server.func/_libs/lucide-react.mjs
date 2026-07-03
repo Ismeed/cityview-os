@@ -722,6 +722,28 @@ var IdCard = createLucideIcon("id-card", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Key = createLucideIcon("key", [
+	["path", {
+		d: "m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4",
+		key: "g0fldk"
+	}],
+	["path", {
+		d: "m21 2-9.6 9.6",
+		key: "1j0ho8"
+	}],
+	["circle", {
+		cx: "7.5",
+		cy: "15.5",
+		r: "5.5",
+		key: "yqb3hr"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var LayoutDashboard = createLucideIcon("layout-dashboard", [
 	["rect", {
 		width: "7",
@@ -1106,15 +1128,5 @@ var X = createLucideIcon("x", [["path", {
 	d: "m6 6 12 12",
 	key: "d8bk6v"
 }]]);
-/**
-* @license lucide-react v0.575.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var Zap = createLucideIcon("zap", [["path", {
-	d: "M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z",
-	key: "1xq2db"
-}]]);
 //#endregion
-export { Cpu as A, Calendar as B, IdCard as C, FileText as D, Fuel as E, CircleCheckBig as F, ArrowUpRight as G, Building2 as H, ChevronDown as I, ArrowRight as K, Check as L, Cog as M, Clock as N, FileCheck as O, CircleCheck as P, ChartLine as R, LayoutDashboard as S, Gauge as T, Briefcase as U, Calculator as V, Award as W, MessageCircle as _, Users as a, Mail as b, Trash2 as c, ShieldCheck as d, ShieldAlert as f, MessageSquare as g, Phone as h, Wallet as i, Compass as j, Database as k, Target as l, Plus as m, X as n, UsersRound as o, Send as p, Activity as q, Wrench as r, Truck as s, Zap as t, Sparkles as u, Menu as v, Handshake as w, Leaf as x, MapPin as y, ChartColumn as z };
+export { Cpu as A, Calendar as B, IdCard as C, FileText as D, Fuel as E, CircleCheckBig as F, ArrowUpRight as G, Building2 as H, ChevronDown as I, ArrowRight as K, Check as L, Cog as M, Clock as N, FileCheck as O, CircleCheck as P, ChartLine as R, Key as S, Gauge as T, Briefcase as U, Calculator as V, Award as W, Menu as _, UsersRound as a, Leaf as b, Target as c, ShieldAlert as d, Send as f, MessageCircle as g, MessageSquare as h, Users as i, Compass as j, Database as k, Sparkles as l, Phone as m, Wrench as n, Truck as o, Plus as p, Activity as q, Wallet as r, Trash2 as s, X as t, ShieldCheck as u, MapPin as v, Handshake as w, LayoutDashboard as x, Mail as y, ChartColumn as z };
