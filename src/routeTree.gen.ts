@@ -9,38 +9,314 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkshopRouteImport } from './routes/workshop'
+import { Route as WhyCngRouteImport } from './routes/why-cng'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ServicesRouteImport } from './routes/services'
+import { Route as ImpactRouteImport } from './routes/impact'
+import { Route as HirePurchaseRouteImport } from './routes/hire-purchase'
+import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as FleetRouteImport } from './routes/fleet'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CareersRouteImport } from './routes/careers'
+import { Route as BranchesRouteImport } from './routes/branches'
+import { Route as BlogRouteImport } from './routes/blog'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ServicesCngConversionRouteImport } from './routes/services.cng-conversion'
 
+const WorkshopRoute = WorkshopRouteImport.update({
+  id: '/workshop',
+  path: '/workshop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhyCngRoute = WhyCngRouteImport.update({
+  id: '/why-cng',
+  path: '/why-cng',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImpactRoute = ImpactRouteImport.update({
+  id: '/impact',
+  path: '/impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HirePurchaseRoute = HirePurchaseRouteImport.update({
+  id: '/hire-purchase',
+  path: '/hire-purchase',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FleetRoute = FleetRouteImport.update({
+  id: '/fleet',
+  path: '/fleet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareersRoute = CareersRouteImport.update({
+  id: '/careers',
+  path: '/careers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BranchesRoute = BranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesCngConversionRoute = ServicesCngConversionRouteImport.update({
+  id: '/cng-conversion',
+  path: '/cng-conversion',
+  getParentRoute: () => ServicesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/blog': typeof BlogRoute
+  '/branches': typeof BranchesRoute
+  '/careers': typeof CareersRoute
+  '/contact': typeof ContactRoute
+  '/fleet': typeof FleetRoute
+  '/gallery': typeof GalleryRoute
+  '/hire-purchase': typeof HirePurchaseRoute
+  '/impact': typeof ImpactRoute
+  '/services': typeof ServicesRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/why-cng': typeof WhyCngRoute
+  '/workshop': typeof WorkshopRoute
+  '/services/cng-conversion': typeof ServicesCngConversionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/blog': typeof BlogRoute
+  '/branches': typeof BranchesRoute
+  '/careers': typeof CareersRoute
+  '/contact': typeof ContactRoute
+  '/fleet': typeof FleetRoute
+  '/gallery': typeof GalleryRoute
+  '/hire-purchase': typeof HirePurchaseRoute
+  '/impact': typeof ImpactRoute
+  '/services': typeof ServicesRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/why-cng': typeof WhyCngRoute
+  '/workshop': typeof WorkshopRoute
+  '/services/cng-conversion': typeof ServicesCngConversionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/blog': typeof BlogRoute
+  '/branches': typeof BranchesRoute
+  '/careers': typeof CareersRoute
+  '/contact': typeof ContactRoute
+  '/fleet': typeof FleetRoute
+  '/gallery': typeof GalleryRoute
+  '/hire-purchase': typeof HirePurchaseRoute
+  '/impact': typeof ImpactRoute
+  '/services': typeof ServicesRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/why-cng': typeof WhyCngRoute
+  '/workshop': typeof WorkshopRoute
+  '/services/cng-conversion': typeof ServicesCngConversionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/blog'
+    | '/branches'
+    | '/careers'
+    | '/contact'
+    | '/fleet'
+    | '/gallery'
+    | '/hire-purchase'
+    | '/impact'
+    | '/services'
+    | '/sitemap.xml'
+    | '/why-cng'
+    | '/workshop'
+    | '/services/cng-conversion'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/blog'
+    | '/branches'
+    | '/careers'
+    | '/contact'
+    | '/fleet'
+    | '/gallery'
+    | '/hire-purchase'
+    | '/impact'
+    | '/services'
+    | '/sitemap.xml'
+    | '/why-cng'
+    | '/workshop'
+    | '/services/cng-conversion'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/blog'
+    | '/branches'
+    | '/careers'
+    | '/contact'
+    | '/fleet'
+    | '/gallery'
+    | '/hire-purchase'
+    | '/impact'
+    | '/services'
+    | '/sitemap.xml'
+    | '/why-cng'
+    | '/workshop'
+    | '/services/cng-conversion'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  BlogRoute: typeof BlogRoute
+  BranchesRoute: typeof BranchesRoute
+  CareersRoute: typeof CareersRoute
+  ContactRoute: typeof ContactRoute
+  FleetRoute: typeof FleetRoute
+  GalleryRoute: typeof GalleryRoute
+  HirePurchaseRoute: typeof HirePurchaseRoute
+  ImpactRoute: typeof ImpactRoute
+  ServicesRoute: typeof ServicesRouteWithChildren
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  WhyCngRoute: typeof WhyCngRoute
+  WorkshopRoute: typeof WorkshopRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/workshop': {
+      id: '/workshop'
+      path: '/workshop'
+      fullPath: '/workshop'
+      preLoaderRoute: typeof WorkshopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/why-cng': {
+      id: '/why-cng'
+      path: '/why-cng'
+      fullPath: '/why-cng'
+      preLoaderRoute: typeof WhyCngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impact': {
+      id: '/impact'
+      path: '/impact'
+      fullPath: '/impact'
+      preLoaderRoute: typeof ImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hire-purchase': {
+      id: '/hire-purchase'
+      path: '/hire-purchase'
+      fullPath: '/hire-purchase'
+      preLoaderRoute: typeof HirePurchaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fleet': {
+      id: '/fleet'
+      path: '/fleet'
+      fullPath: '/fleet'
+      preLoaderRoute: typeof FleetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/careers': {
+      id: '/careers'
+      path: '/careers'
+      fullPath: '/careers'
+      preLoaderRoute: typeof CareersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/branches': {
+      id: '/branches'
+      path: '/branches'
+      fullPath: '/branches'
+      preLoaderRoute: typeof BranchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +324,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services/cng-conversion': {
+      id: '/services/cng-conversion'
+      path: '/cng-conversion'
+      fullPath: '/services/cng-conversion'
+      preLoaderRoute: typeof ServicesCngConversionRouteImport
+      parentRoute: typeof ServicesRoute
+    }
   }
 }
 
+interface ServicesRouteChildren {
+  ServicesCngConversionRoute: typeof ServicesCngConversionRoute
+}
+
+const ServicesRouteChildren: ServicesRouteChildren = {
+  ServicesCngConversionRoute: ServicesCngConversionRoute,
+}
+
+const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
+  ServicesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  BlogRoute: BlogRoute,
+  BranchesRoute: BranchesRoute,
+  CareersRoute: CareersRoute,
+  ContactRoute: ContactRoute,
+  FleetRoute: FleetRoute,
+  GalleryRoute: GalleryRoute,
+  HirePurchaseRoute: HirePurchaseRoute,
+  ImpactRoute: ImpactRoute,
+  ServicesRoute: ServicesRouteWithChildren,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  WhyCngRoute: WhyCngRoute,
+  WorkshopRoute: WorkshopRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
