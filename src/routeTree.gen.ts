@@ -14,7 +14,12 @@ import { Route as WhyCngRouteImport } from './routes/why-cng'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as ImpactRouteImport } from './routes/impact'
 import { Route as HirePurchaseRouteImport } from './routes/hire-purchase'
+import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FleetRouteImport } from './routes/fleet'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CareersRouteImport } from './routes/careers'
+import { Route as BranchesRouteImport } from './routes/branches'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesCngConversionRouteImport } from './routes/services.cng-conversion'
@@ -44,9 +49,34 @@ const HirePurchaseRoute = HirePurchaseRouteImport.update({
   path: '/hire-purchase',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FleetRoute = FleetRouteImport.update({
   id: '/fleet',
   path: '/fleet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareersRoute = CareersRouteImport.update({
+  id: '/careers',
+  path: '/careers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BranchesRoute = BranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -68,7 +98,12 @@ const ServicesCngConversionRoute = ServicesCngConversionRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/blog': typeof BlogRoute
+  '/branches': typeof BranchesRoute
+  '/careers': typeof CareersRoute
+  '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
+  '/gallery': typeof GalleryRoute
   '/hire-purchase': typeof HirePurchaseRoute
   '/impact': typeof ImpactRoute
   '/services': typeof ServicesRouteWithChildren
@@ -79,7 +114,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/blog': typeof BlogRoute
+  '/branches': typeof BranchesRoute
+  '/careers': typeof CareersRoute
+  '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
+  '/gallery': typeof GalleryRoute
   '/hire-purchase': typeof HirePurchaseRoute
   '/impact': typeof ImpactRoute
   '/services': typeof ServicesRouteWithChildren
@@ -91,7 +131,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/blog': typeof BlogRoute
+  '/branches': typeof BranchesRoute
+  '/careers': typeof CareersRoute
+  '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
+  '/gallery': typeof GalleryRoute
   '/hire-purchase': typeof HirePurchaseRoute
   '/impact': typeof ImpactRoute
   '/services': typeof ServicesRouteWithChildren
@@ -104,7 +149,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/blog'
+    | '/branches'
+    | '/careers'
+    | '/contact'
     | '/fleet'
+    | '/gallery'
     | '/hire-purchase'
     | '/impact'
     | '/services'
@@ -115,7 +165,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/blog'
+    | '/branches'
+    | '/careers'
+    | '/contact'
     | '/fleet'
+    | '/gallery'
     | '/hire-purchase'
     | '/impact'
     | '/services'
@@ -126,7 +181,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/blog'
+    | '/branches'
+    | '/careers'
+    | '/contact'
     | '/fleet'
+    | '/gallery'
     | '/hire-purchase'
     | '/impact'
     | '/services'
@@ -138,7 +198,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  BlogRoute: typeof BlogRoute
+  BranchesRoute: typeof BranchesRoute
+  CareersRoute: typeof CareersRoute
+  ContactRoute: typeof ContactRoute
   FleetRoute: typeof FleetRoute
+  GalleryRoute: typeof GalleryRoute
   HirePurchaseRoute: typeof HirePurchaseRoute
   ImpactRoute: typeof ImpactRoute
   ServicesRoute: typeof ServicesRouteWithChildren
@@ -183,11 +248,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HirePurchaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fleet': {
       id: '/fleet'
       path: '/fleet'
       fullPath: '/fleet'
       preLoaderRoute: typeof FleetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/careers': {
+      id: '/careers'
+      path: '/careers'
+      fullPath: '/careers'
+      preLoaderRoute: typeof CareersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/branches': {
+      id: '/branches'
+      path: '/branches'
+      fullPath: '/branches'
+      preLoaderRoute: typeof BranchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -229,7 +329,12 @@ const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  BlogRoute: BlogRoute,
+  BranchesRoute: BranchesRoute,
+  CareersRoute: CareersRoute,
+  ContactRoute: ContactRoute,
   FleetRoute: FleetRoute,
+  GalleryRoute: GalleryRoute,
   HirePurchaseRoute: HirePurchaseRoute,
   ImpactRoute: ImpactRoute,
   ServicesRoute: ServicesRouteWithChildren,
