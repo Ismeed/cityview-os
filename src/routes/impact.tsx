@@ -43,8 +43,8 @@ function Impact() {
       <section className="pb-20">
         <div className="container-x">
           <div className="rounded-3xl bg-emerald-gradient p-10 text-white md:p-14">
-            <SectionHeading eyebrow={<span className="text-white">Partnerships</span> as any} title="Investors, government, corporates — let's compound this impact together." />
-            <Link to="/contact" className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-forest-deep hover:bg-mist">Contact partnerships <ArrowRight className="h-4 w-4" /></Link>
+            <h2 className="font-display text-4xl font-semibold md:text-5xl">"Investors, government, corporates — let's compound this impact together." />
+            </h2><p className="mt-4 max-w-2xl text-white/85">Investors, government, corporates — let's compound this impact together.</p><Link to="/contact" className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-forest-deep hover:bg-mist">Contact partnerships <ArrowRight className="h-4 w-4" /></Link>
           </div>
         </div>
       </section>
