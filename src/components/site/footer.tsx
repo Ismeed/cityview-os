@@ -42,7 +42,7 @@ export function SiteFooter() {
       <div className="container-x relative py-20">
         <div className="grid gap-14 lg:grid-cols-[1.4fr_2fr]">
           <div>
-            <Logo variant="light" />
+            <Logo variant="light" showTagline={true} />
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/60">
               Driving Africa's clean mobility revolution through CNG conversion,
               intelligent fleet operations, and world-class automotive

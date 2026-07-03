@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-CHB3yfU5.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-B90nNW2p.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/__root.tsx",
@@ -19,25 +19,25 @@ var tsrStartManifest = () => ({ routes: {
 			"/why-cng",
 			"/workshop"
 		],
-		preloads: ["/assets/index-CZdX7GjK.js", "/assets/jsx-runtime-bzQ4Vb5N.js"],
+		preloads: ["/assets/index-CjfREqJB.js", "/assets/jsx-runtime-bzQ4Vb5N.js"],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-CZdX7GjK.js"
+			src: "/assets/index-CjfREqJB.js"
 		} }]
 	},
 	"/": {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/index.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/routes-DW2pLrWo.js",
-			"/assets/arrow-right-DMR8PkgM.js",
-			"/assets/truck-BTveLi9l.js",
-			"/assets/cpu-DCqyTxMf.js",
-			"/assets/gauge-DuRTIrw7.js",
-			"/assets/leaf-D7ZDVBnt.js",
-			"/assets/shield-check-CG1LQvx3.js",
-			"/assets/wrench-rGFbFNl6.js",
+			"/assets/routes-DALM6a5f.js",
+			"/assets/arrow-right-DQtigiaN.js",
+			"/assets/truck-Dscjge1i.js",
+			"/assets/cpu-CieV-1M6.js",
+			"/assets/gauge-Dxp2uD33.js",
+			"/assets/leaf-DB82vsRn.js",
+			"/assets/shield-check-CZK7BxPM.js",
+			"/assets/wrench-BAN6b0Ik.js",
 			"/assets/section-DbOxexjY.js",
 			"/assets/counter-D5L6MjIe.js",
 			"/assets/cng-detail-Do1kmQ87.js",
@@ -50,8 +50,8 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/about.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/about-CFeCJrOw.js",
-			"/assets/arrow-right-DMR8PkgM.js",
+			"/assets/about-CPSLn24a.js",
+			"/assets/arrow-right-DQtigiaN.js",
 			"/assets/section-DbOxexjY.js",
 			"/assets/counter-D5L6MjIe.js",
 			"/assets/cng-detail-Do1kmQ87.js"
@@ -60,14 +60,14 @@ var tsrStartManifest = () => ({ routes: {
 	"/admin": {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/admin.tsx",
 		children: void 0,
-		preloads: ["/assets/admin-DZym5Bl0.js", "/assets/wrench-rGFbFNl6.js"]
+		preloads: ["/assets/admin-OsTjlGbT.js", "/assets/wrench-BAN6b0Ik.js"]
 	},
 	"/blog": {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/blog.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/blog-QJ0VEStE.js",
-			"/assets/arrow-right-DMR8PkgM.js",
+			"/assets/blog-B6Gmvv3Q.js",
+			"/assets/arrow-right-DQtigiaN.js",
 			"/assets/section-DbOxexjY.js"
 		]
 	},
@@ -75,10 +75,10 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/branches.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/branches-mYwQgQGV.js",
-			"/assets/arrow-right-DMR8PkgM.js",
-			"/assets/clock-B6wW5r42.js",
-			"/assets/shield-check-CG1LQvx3.js",
+			"/assets/branches-DVzkFFJW.js",
+			"/assets/arrow-right-DQtigiaN.js",
+			"/assets/clock-D4A5SzXE.js",
+			"/assets/shield-check-CZK7BxPM.js",
 			"/assets/section-DbOxexjY.js"
 		]
 	},
@@ -86,8 +86,8 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/careers.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/careers-B5gPH7VJ.js",
-			"/assets/arrow-right-DMR8PkgM.js",
+			"/assets/careers-DHsNQ4eF.js",
+			"/assets/arrow-right-DQtigiaN.js",
 			"/assets/section-DbOxexjY.js"
 		]
 	},
@@ -95,8 +95,8 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/contact.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/contact-DEhJJR5J.js",
-			"/assets/clock-B6wW5r42.js",
+			"/assets/contact-0D8XiQOI.js",
+			"/assets/clock-D4A5SzXE.js",
 			"/assets/section-DbOxexjY.js"
 		]
 	},
@@ -104,11 +104,11 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/fleet.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/fleet-EMr0rGVX.js",
-			"/assets/arrow-right-DMR8PkgM.js",
-			"/assets/circle-check-big-GjpIizD8.js",
-			"/assets/cpu-DCqyTxMf.js",
-			"/assets/wrench-rGFbFNl6.js",
+			"/assets/fleet-DJ5sL-Sb.js",
+			"/assets/arrow-right-DQtigiaN.js",
+			"/assets/circle-check-big-BDoq4pvB.js",
+			"/assets/cpu-CieV-1M6.js",
+			"/assets/wrench-BAN6b0Ik.js",
 			"/assets/section-DbOxexjY.js"
 		]
 	},
@@ -128,11 +128,11 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/hire-purchase.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/hire-purchase-BdsXFt67.js",
-			"/assets/arrow-right-DMR8PkgM.js",
-			"/assets/circle-check-big-GjpIizD8.js",
-			"/assets/circle-check-DdHkHwQX.js",
-			"/assets/send-BV6meVZ5.js",
+			"/assets/hire-purchase-s-ytpCnC.js",
+			"/assets/arrow-right-DQtigiaN.js",
+			"/assets/circle-check-big-BDoq4pvB.js",
+			"/assets/circle-check-KJxfspOi.js",
+			"/assets/send-BC575JTu.js",
 			"/assets/section-DbOxexjY.js",
 			"/assets/keke-fleet-BrJFgoem.js"
 		]
@@ -141,8 +141,8 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/impact.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/impact-DYesMPtI.js",
-			"/assets/arrow-right-DMR8PkgM.js",
+			"/assets/impact-BWkEbD7r.js",
+			"/assets/arrow-right-DQtigiaN.js",
 			"/assets/section-DbOxexjY.js",
 			"/assets/counter-D5L6MjIe.js"
 		]
@@ -151,12 +151,12 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/services.tsx",
 		children: ["/services/cng-conversion"],
 		preloads: [
-			"/assets/services-BceGhPOD.js",
-			"/assets/arrow-right-DMR8PkgM.js",
-			"/assets/truck-BTveLi9l.js",
-			"/assets/gauge-DuRTIrw7.js",
-			"/assets/shield-check-CG1LQvx3.js",
-			"/assets/wrench-rGFbFNl6.js",
+			"/assets/services-Db365rGP.js",
+			"/assets/arrow-right-DQtigiaN.js",
+			"/assets/truck-Dscjge1i.js",
+			"/assets/gauge-Dxp2uD33.js",
+			"/assets/shield-check-CZK7BxPM.js",
+			"/assets/wrench-BAN6b0Ik.js",
 			"/assets/section-DbOxexjY.js"
 		]
 	},
@@ -164,10 +164,10 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/why-cng.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/why-cng-Cc0QZVEO.js",
-			"/assets/arrow-right-DMR8PkgM.js",
-			"/assets/leaf-D7ZDVBnt.js",
-			"/assets/shield-check-CG1LQvx3.js",
+			"/assets/why-cng-GSO1kR0G.js",
+			"/assets/arrow-right-DQtigiaN.js",
+			"/assets/leaf-DB82vsRn.js",
+			"/assets/shield-check-CZK7BxPM.js",
 			"/assets/section-DbOxexjY.js"
 		]
 	},
@@ -175,12 +175,12 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/workshop.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/workshop-ESEvSJgv.js",
-			"/assets/arrow-right-DMR8PkgM.js",
-			"/assets/circle-check-big-GjpIizD8.js",
-			"/assets/gauge-DuRTIrw7.js",
-			"/assets/send-BV6meVZ5.js",
-			"/assets/wrench-rGFbFNl6.js",
+			"/assets/workshop-BT7mSvey.js",
+			"/assets/arrow-right-DQtigiaN.js",
+			"/assets/circle-check-big-BDoq4pvB.js",
+			"/assets/gauge-Dxp2uD33.js",
+			"/assets/send-BC575JTu.js",
+			"/assets/wrench-BAN6b0Ik.js",
 			"/assets/section-DbOxexjY.js",
 			"/assets/workshop-B31JJ-Cq.js"
 		]
@@ -189,8 +189,8 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/user/.gemini/antigravity/scratch/cityview-spark-synergy/src/routes/services.cng-conversion.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/services.cng-conversion-DhxZGcfm.js",
-			"/assets/circle-check-DdHkHwQX.js",
+			"/assets/services.cng-conversion-4mqAnVrj.js",
+			"/assets/circle-check-KJxfspOi.js",
 			"/assets/cng-detail-Do1kmQ87.js"
 		]
 	}
