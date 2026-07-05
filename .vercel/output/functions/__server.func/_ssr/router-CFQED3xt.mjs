@@ -628,14 +628,6 @@ var Route$16 = createRootRouteWithContext()({
 			{
 				name: "twitter:description",
 				content: "CityView Digital HQ is the professional corporate website for a clean mobility company."
-			},
-			{
-				property: "og:image",
-				content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/395a2872-2869-4890-8d8e-6c642737f39f/id-preview-bda91282--becf2a94-5fc0-4add-a892-507b1d150cef.lovable.app-1783080749163.png"
-			},
-			{
-				name: "twitter:image",
-				content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/395a2872-2869-4890-8d8e-6c642737f39f/id-preview-bda91282--becf2a94-5fc0-4add-a892-507b1d150cef.lovable.app-1783080749163.png"
 			}
 		],
 		links: [
@@ -645,8 +637,8 @@ var Route$16 = createRootRouteWithContext()({
 			},
 			{
 				rel: "icon",
-				href: "/favicon.ico",
-				type: "image/x-icon"
+				href: "/favicon.svg",
+				type: "image/svg+xml"
 			},
 			{
 				rel: "preconnect",

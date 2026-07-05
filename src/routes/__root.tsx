@@ -7,10 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "../components/site/header";
 import { SiteFooter } from "../components/site/footer";
 
@@ -41,9 +40,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -90,12 +86,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "CityView CNG Automobile Synergy — Driving Africa's Clean Mobility Revolution" },
       { name: "description", content: "CityView Digital HQ is the professional corporate website for a clean mobility company." },
       { name: "twitter:description", content: "CityView Digital HQ is the professional corporate website for a clean mobility company." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/395a2872-2869-4890-8d8e-6c642737f39f/id-preview-bda91282--becf2a94-5fc0-4add-a892-507b1d150cef.lovable.app-1783080749163.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/395a2872-2869-4890-8d8e-6c642737f39f/id-preview-bda91282--becf2a94-5fc0-4add-a892-507b1d150cef.lovable.app-1783080749163.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
