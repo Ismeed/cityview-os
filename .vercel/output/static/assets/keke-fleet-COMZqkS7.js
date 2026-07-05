@@ -1,0 +1,1 @@
+var e=`/assets/keke-fleet-BRZomEch.png`;export{e as t};

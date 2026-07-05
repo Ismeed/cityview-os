@@ -1,5 +1,4 @@
 {
-  "buildCommand": "bun run build",
-  "installCommand": "bun install --backend=copy",
+  "version": 3,
   "framework": null
 }
