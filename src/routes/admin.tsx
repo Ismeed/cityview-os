@@ -54,7 +54,7 @@ function AdminPanel() {
     "System Administrator": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
     "Super Admin": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
     "Branch Operations Officer": ["fleet", "drivers", "shifts", "hp"],
-    "Workshop & CNG Operations Officer": ["workshop", "inventory", "hp"],
+    "Workshop & CNG Operations Officer": ["workshop", "inventory"],
     "Receptionist": ["frontdesk", "hp", "drivers", "workshop", "crm"],
   };
 
