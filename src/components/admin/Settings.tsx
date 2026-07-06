@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ERPStore, MockUser } from "./mockData";
-import { Shield, Database, Save, Upload, Settings2, RefreshCw, Key, Eye, EyeOff, Clipboard, Check, User } from "lucide-react";
+import { Shield, Database, Save, Upload, Settings2, RefreshCw, Key, Eye, EyeOff, Clipboard, Check, User, UserPlus, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface SettingsProps {
@@ -39,6 +39,18 @@ export function Settings({ currentUser }: SettingsProps) {
   const [revealPasswords, setRevealPasswords] = useState<Record<string, boolean>>({});
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
+  // User Management State
+  const [users, setUsers] = useState<MockUser[]>(() => ERPStore.getUsers());
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    email: "",
+    name: "",
+    role: "Branch Operations Officer",
+    department: "Operations",
+    branch: "BR-KT",
+    passwordHash: "Password123"
+  });
+
   const isAdmin = currentUser?.role === "Super Admin" || 
                   currentUser?.role === "Managing Director (CEO)" || 
                   currentUser?.role === "System Administrator" || 
@@ -50,7 +62,7 @@ export function Settings({ currentUser }: SettingsProps) {
     setSaving(true);
     setTimeout(() => {
       setSaving(false);
-      ERPStore.addAuditLog(currentUser?.name || "Admin", currentUser?.role || "Super Administrator", "Save System Settings", "Updated company profile config & session timeout settings.");
+      ERPStore.addAuditLog(currentUser?.name || "Admin", currentUser?.role || "Super Administrator", "Save System Settings", "Updated company profile config.");
       toast.success("Settings Saved Successfully", {
         description: "Operating rules and company profile variables have been committed."
       });
@@ -74,8 +86,8 @@ export function Settings({ currentUser }: SettingsProps) {
 
     setPasswordLoading(true);
     setTimeout(() => {
-      const users = ERPStore.getUsers();
-      const updatedUsers = users.map(u => {
+      const allUsers = ERPStore.getUsers();
+      const updatedUsers = allUsers.map(u => {
         if (u.email.toLowerCase() === currentUser.email.toLowerCase()) {
           return { ...u, passwordHash: passwordState.newPassword };
         }
@@ -84,6 +96,7 @@ export function Settings({ currentUser }: SettingsProps) {
 
       // Save to store
       ERPStore.saveUsers(updatedUsers);
+      setUsers(updatedUsers);
 
       // Update current session user in localstorage
       const updatedUserSession = { ...currentUser, passwordHash: passwordState.newPassword };
@@ -98,6 +111,98 @@ export function Settings({ currentUser }: SettingsProps) {
       setPasswordState({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setPasswordLoading(false);
     }, 800);
+  };
+
+  // Admin: Create User
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAdmin) return;
+
+    const emailLower = newUser.email.trim().toLowerCase();
+    if (users.some(u => u.email.toLowerCase() === emailLower)) {
+      toast.error("Email Taken", { description: "An account with this email address already exists." });
+      return;
+    }
+
+    const branchNameMap: Record<string, string> = {
+      "BR-KT": "Katsina HQ",
+      "BR-GB": "Gombe Hub",
+      "ALL": "Global Enterprise"
+    };
+
+    const userEntry: MockUser = {
+      email: emailLower,
+      name: newUser.name.trim(),
+      role: newUser.role,
+      department: newUser.department.trim(),
+      branch: newUser.branch,
+      branchName: branchNameMap[newUser.branch] || "Katsina HQ",
+      passwordHash: newUser.passwordHash,
+      disabled: false
+    };
+
+    const updatedUsers = [...users, userEntry];
+    ERPStore.saveUsers(updatedUsers);
+    setUsers(updatedUsers);
+
+    ERPStore.addAuditLog(currentUser?.name || "Admin", currentUser?.role || "Super Admin", "Create User Account", `Registered account for ${userEntry.name} (${userEntry.role})`);
+
+    toast.success("Account Created", {
+      description: `User account for ${userEntry.name} registered with default password.`
+    });
+
+    setShowAddUserModal(false);
+    setNewUser({
+      email: "",
+      name: "",
+      role: "Branch Operations Officer",
+      department: "Operations",
+      branch: "BR-KT",
+      passwordHash: "Password123"
+    });
+  };
+
+  // Admin: Toggle user disabled status
+  const handleToggleUserStatus = (email: string) => {
+    if (!isAdmin) return;
+    if (email.toLowerCase() === currentUser?.email.toLowerCase()) {
+      toast.warning("Action Blocked", { description: "You cannot disable your own active login session." });
+      return;
+    }
+
+    const updatedUsers = users.map(u => {
+      if (u.email.toLowerCase() === email.toLowerCase()) {
+        const nextStatus = !u.disabled;
+        ERPStore.addAuditLog(currentUser?.name || "Admin", currentUser?.role || "Super Admin", nextStatus ? "Disable User" : "Enable User", `Changed status for email: ${u.email}`);
+        return { ...u, disabled: nextStatus };
+      }
+      return u;
+    });
+
+    ERPStore.saveUsers(updatedUsers);
+    setUsers(updatedUsers);
+
+    toast.info("Account Privileges Updated", {
+      description: "User account status toggled successfully."
+    });
+  };
+
+  // Admin: Delete User
+  const handleDeleteUser = (email: string) => {
+    if (!isAdmin) return;
+    if (email.toLowerCase() === currentUser?.email.toLowerCase()) {
+      toast.warning("Action Blocked", { description: "You cannot delete your own active login session." });
+      return;
+    }
+
+    if (confirm("Are you sure you want to permanently delete this user account?")) {
+      const updatedUsers = users.filter(u => u.email.toLowerCase() !== email.toLowerCase());
+      ERPStore.saveUsers(updatedUsers);
+      setUsers(updatedUsers);
+
+      ERPStore.addAuditLog(currentUser?.name || "Admin", currentUser?.role || "Super Admin", "Delete User Account", `Permanently deleted email: ${email}`);
+      toast.success("Account Deleted", { description: "The login account has been permanently removed from the register." });
+    }
   };
 
   const handleBackup = () => {
@@ -156,7 +261,7 @@ export function Settings({ currentUser }: SettingsProps) {
           }
         });
         
-        ERPStore.addAuditLog(currentUser?.name || "Admin", currentUser?.role || "Super Administrator", "Import Backup JSON", "Restored localstorage state from file.");
+        ERPStore.addAuditLog(currentUser?.name || "Admin", currentUser?.role || "Super Administrator", "Import Backup JSON", "Restored localstorage state.");
         toast.success("Database Restored", {
           description: "System records successfully imported. Reloading to sync state..."
         });
@@ -207,16 +312,38 @@ export function Settings({ currentUser }: SettingsProps) {
     setRevealPasswords(prev => ({ ...prev, [email]: !prev[email] }));
   };
 
+  const allRoles = [
+    "Super Admin",
+    "System Administrator",
+    "Branch Operations Officer",
+    "Workshop & CNG Operations Officer",
+    "Receptionist",
+    "Managing Director (CEO)",
+    "Executive Director",
+    "Branch Manager",
+    "Operations Manager",
+    "Workshop Manager",
+    "Fleet Manager",
+    "Cashier",
+    "Accountant",
+    "HR Manager",
+    "Customer Service",
+    "Inventory Officer",
+    "Technician"
+  ];
+
   return (
     <div className="space-y-8 animate-fade-in max-w-5xl text-foreground">
       {/* Header */}
-      <div className="border-b border-border pb-6">
-        <h2 className="font-display text-3xl font-bold text-foreground">Profile & Settings</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {isAdmin 
-            ? "Manage system-wide corporate settings, download backups, and audit simulated user credentials." 
-            : "Update your login password and review your active branch operational privileges."}
-        </p>
+      <div className="border-b border-border pb-6 flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-3xl font-bold text-foreground">Profile & Settings</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isAdmin 
+              ? "Manage system-wide corporate settings, register new staff accounts, and enable or disable access privileges." 
+              : "Update your login password and review your active branch operational privileges."}
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3 items-start">
@@ -368,7 +495,7 @@ export function Settings({ currentUser }: SettingsProps) {
                     />
                     <label
                       htmlFor="restore-file-input"
-                      className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 border border-emerald/15 hover:bg-emerald-500/20 text-emerald px-4 py-2.5 text-xs font-bold transition cursor-pointer text-center"
+                      className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 border border-emerald/15 hover:bg-emerald-500/20 text-emerald px-4 py-2.5 text-xs font-bold transition cursor-pointer text-center text-center"
                     >
                       <Upload className="h-4 w-4" />
                       Restore Database File
@@ -415,22 +542,27 @@ export function Settings({ currentUser }: SettingsProps) {
         </div>
       </div>
 
-      {/* Admin section: Enterprise User Credentials Directory (Only visible to Admin) */}
+      {/* Admin section: Enterprise User Credentials Directory & Creation (Only visible to Admin) */}
       {isAdmin && (
         <div className="rounded-3xl border border-border bg-card p-6 shadow-soft space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-4 gap-2">
             <div>
               <h3 className="font-display font-bold text-lg text-foreground flex items-center gap-2">
                 <Shield className="h-5 w-5 text-emerald" />
-                Enterprise Credentials Dashboard
+                User Account Management
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Secure access directory listing login emails and passwords for walk-in simulation testing.
+                Create new staff accounts, assign default passwords, and enable/disable system access.
               </p>
             </div>
-            <span className="rounded-full bg-emerald-500/10 text-emerald px-3 py-1 text-xs font-bold w-fit">
-              {ERPStore.getUsers().length} Registered Accounts
-            </span>
+            
+            <button
+              onClick={() => setShowAddUserModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-forest px-4.5 py-2 text-xs font-semibold text-white hover:bg-forest-deep transition cursor-pointer"
+            >
+              <UserPlus className="h-4 w-4" />
+              Register User Account
+            </button>
           </div>
 
           <div className="overflow-x-auto border border-border rounded-2xl">
@@ -442,12 +574,13 @@ export function Settings({ currentUser }: SettingsProps) {
                   <th className="p-4">Hub / Branch</th>
                   <th className="p-4">Login Email</th>
                   <th className="p-4">Password</th>
-                  <th className="p-4 text-center">Simulate Credentials</th>
+                  <th className="p-4 text-center">Status</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {ERPStore.getUsers().map((user) => (
-                  <tr key={user.email} className="hover:bg-muted/10 transition">
+                {users.map((user) => (
+                  <tr key={user.email} className={`hover:bg-muted/10 transition ${user.disabled ? 'bg-muted/20 opacity-70' : ''}`}>
                     <td className="p-4 font-semibold text-foreground">{user.name}</td>
                     <td className="p-4">
                       <span className="inline-block rounded bg-muted px-2 py-0.5 text-[9px] font-bold text-muted-foreground uppercase">
@@ -480,12 +613,153 @@ export function Settings({ currentUser }: SettingsProps) {
                       </div>
                     </td>
                     <td className="p-4 text-center">
-                      <span className="text-[10px] text-muted-foreground italic">Use Login Form</span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                        user.disabled 
+                          ? 'bg-red-500/10 text-red-500' 
+                          : 'bg-emerald-500/10 text-emerald'
+                      }`}>
+                        {user.disabled ? "Suspended" : "Active"}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {user.email !== currentUser?.email && (
+                          <>
+                            <button
+                              onClick={() => handleToggleUserStatus(user.email)}
+                              className="text-muted-foreground hover:text-emerald transition cursor-pointer p-1 rounded hover:bg-muted"
+                              title={user.disabled ? "Enable Account" : "Disable Account"}
+                            >
+                              {user.disabled ? <ToggleLeft className="h-4.5 w-4.5" /> : <ToggleRight className="h-4.5 w-4.5 text-emerald" />}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user.email)}
+                              className="text-muted-foreground hover:text-red-500 transition cursor-pointer p-1 rounded hover:bg-muted"
+                              title="Delete Account"
+                            >
+                              <Trash2 className="h-4.5 w-4.5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card w-full max-w-md rounded-3xl border border-border p-6 shadow-2xl animate-scale-in space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="font-display font-bold text-lg text-foreground flex items-center gap-1.5">
+                <UserPlus className="h-5 w-5 text-emerald" />
+                Register Staff Account
+              </h3>
+              <button
+                onClick={() => setShowAddUserModal(false)}
+                className="text-muted-foreground hover:text-foreground text-sm cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Staff Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Musa Ibrahim"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-card font-semibold text-foreground"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Login Email Address</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. musa.i@cityview.ng"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-card font-mono text-foreground"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Simulated Role</label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value }))}
+                    className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-card font-semibold text-foreground"
+                  >
+                    {allRoles.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Hub Branch Location</label>
+                  <select
+                    value={newUser.branch}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, branch: e.target.value }))}
+                    className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-card font-semibold text-foreground"
+                  >
+                    <option value="BR-KT">Katsina HQ</option>
+                    <option value="BR-GB">Gombe Hub</option>
+                    <option value="ALL">Global Enterprise</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Department</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Operations, Finance, Tech Support"
+                  value={newUser.department}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, department: e.target.value }))}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-card text-foreground"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Default Password</label>
+                <input
+                  type="text"
+                  required
+                  value={newUser.passwordHash}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, passwordHash: e.target.value }))}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-card font-mono text-foreground"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddUserModal(false)}
+                  className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold hover:bg-muted transition cursor-pointer text-foreground"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-full bg-forest px-5 py-2 text-xs font-semibold text-white hover:bg-forest-deep transition shadow-glow-soft cursor-pointer"
+                >
+                  Register Account
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

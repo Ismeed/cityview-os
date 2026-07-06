@@ -42,6 +42,13 @@ function LoginPage() {
       );
 
       if (user) {
+        if (user.disabled) {
+          toast.error("Access Suspended", {
+            description: "This account has been disabled by the system administrator."
+          });
+          setLoading(false);
+          return;
+        }
         localStorage.setItem("cityview_user_session", JSON.stringify(user));
         toast.success("Access Granted", {
           description: `Logged in as ${user.name} (${user.role})`
@@ -57,6 +64,12 @@ function LoginPage() {
   };
 
   const selectDemoAccount = (user: MockUser) => {
+    if (user.disabled) {
+      toast.error("Access Suspended", {
+        description: "This account has been disabled."
+      });
+      return;
+    }
     setEmail(user.email);
     setPassword(user.passwordHash);
     toast.info("Demo credentials selected", {
@@ -119,7 +132,7 @@ function LoginPage() {
             </div>
 
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              {ERPStore.getUsers().map((user) => {
+              {ERPStore.getUsers().filter(u => u.role === "Super Admin").map((user) => {
                 const isSuperAdmin = user.role === "Super Admin";
                 const isFleet = user.department.includes("Fleet");
                 
