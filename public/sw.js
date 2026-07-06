@@ -1,5 +1,5 @@
 // Simple Service Worker for CityView ERP PWA
-const CACHE_NAME = 'cityview-cache-v1';
+const CACHE_NAME = 'cityview-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/login',
