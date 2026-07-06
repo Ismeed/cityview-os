@@ -137,10 +137,10 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
     },
     { 
       id: "settings", 
-      label: "System Settings", 
+      label: "Profile & Settings", 
       icon: Settings, 
       category: "System",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "System Administrator", "Super Admin"]
+      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Workshop Manager", "Fleet Manager", "Cashier", "Accountant", "HR Manager", "Customer Service", "Inventory Officer", "Technician", "System Administrator", "Super Admin", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Receptionist"]
     }
   ];
 

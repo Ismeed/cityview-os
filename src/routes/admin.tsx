@@ -41,21 +41,21 @@ function AdminPanel() {
   const permissions: Record<string, AdminTab[]> = {
     "Managing Director (CEO)": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
     "Executive Director": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
-    "Branch Manager": ["branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm"],
-    "Operations Manager": ["fleet", "drivers", "shifts", "hp", "workshop", "crm"],
-    "Workshop Manager": ["fleet", "workshop", "inventory"],
-    "Fleet Manager": ["fleet", "drivers", "shifts", "hp"],
-    "Cashier": ["shifts", "hp", "finance", "crm"],
-    "Accountant": ["finance", "hp", "inventory"],
-    "HR Manager": ["branches", "employees"],
-    "Customer Service": ["drivers", "hp", "workshop", "crm"],
-    "Inventory Officer": ["inventory"],
-    "Technician": ["fleet", "workshop"],
+    "Branch Manager": ["branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
+    "Operations Manager": ["fleet", "drivers", "shifts", "hp", "workshop", "crm", "settings"],
+    "Workshop Manager": ["fleet", "workshop", "inventory", "settings"],
+    "Fleet Manager": ["fleet", "drivers", "shifts", "hp", "settings"],
+    "Cashier": ["shifts", "hp", "finance", "crm", "settings"],
+    "Accountant": ["finance", "hp", "inventory", "settings"],
+    "HR Manager": ["branches", "employees", "settings"],
+    "Customer Service": ["drivers", "hp", "workshop", "crm", "settings"],
+    "Inventory Officer": ["inventory", "settings"],
+    "Technician": ["fleet", "workshop", "settings"],
     "System Administrator": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
     "Super Admin": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
-    "Branch Operations Officer": ["fleet", "drivers", "shifts", "hp"],
-    "Workshop & CNG Operations Officer": ["workshop", "inventory"],
-    "Receptionist": ["frontdesk", "hp", "drivers", "workshop", "crm"],
+    "Branch Operations Officer": ["fleet", "drivers", "shifts", "hp", "settings"],
+    "Workshop & CNG Operations Officer": ["workshop", "inventory", "settings"],
+    "Receptionist": ["frontdesk", "hp", "drivers", "workshop", "crm", "settings"],
   };
 
   useEffect(() => {
@@ -149,7 +149,7 @@ function AdminPanel() {
       case "frontdesk":
         return <FrontDesk selectedBranch={selectedBranch} />;
       case "settings":
-        return <Settings />;
+        return <Settings currentUser={currentUser} />;
       default:
         return <ExecutiveDashboard branchId={selectedBranch} />;
     }

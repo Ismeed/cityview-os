@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { mockUsers, MockUser } from "../components/admin/mockData";
+import { ERPStore, MockUser } from "../components/admin/mockData";
 import { Shield, Mail, Lock, ArrowRight, Building2, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "../components/site/logo";
@@ -36,7 +36,8 @@ function LoginPage() {
     setLoading(true);
 
     setTimeout(() => {
-      const user = mockUsers.find(
+      const users = ERPStore.getUsers();
+      const user = users.find(
         (u) => u.email.toLowerCase() === email.toLowerCase() && u.passwordHash === password
       );
 
@@ -118,7 +119,7 @@ function LoginPage() {
             </div>
 
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              {mockUsers.map((user) => {
+              {ERPStore.getUsers().map((user) => {
                 const isSuperAdmin = user.role === "Super Admin";
                 const isFleet = user.department.includes("Fleet");
                 

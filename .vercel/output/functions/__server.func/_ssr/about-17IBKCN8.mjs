@@ -3,7 +3,7 @@ import { n as PageHero, r as SectionHeading, t as Eyebrow } from "./section-B6sx
 import { t as Counter } from "./counter-B-Gf7BFB.mjs";
 import { t as cng_detail_default } from "./cng-detail-DHUChgfd.mjs";
 import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { Ct as ArrowRight, m as Target, tt as Compass, xt as Award } from "../_libs/lucide-react.mjs";
+import { Ct as Award, Tt as ArrowRight, m as Target, nt as Compass } from "../_libs/lucide-react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/about-17IBKCN8.js
 var import_jsx_runtime = require_jsx_runtime();
 var timeline = [

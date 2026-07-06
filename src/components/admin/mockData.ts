@@ -366,6 +366,9 @@ export class ERPStore {
     const transactions = ERPStore.getTransactions();
     ERPStore.saveTransactions([tx, ...transactions]);
   };
+
+  static getUsers = () => loadLocalStorageData<MockUser[]>("cityview_erp_users", mockUsers);
+  static saveUsers = (data: MockUser[]) => saveLocalStorageData("cityview_erp_users", data);
 }
 
 export interface MockUser {
