@@ -93,7 +93,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
       label: "Hire Purchase Ledger", 
       icon: FileSignature, 
       category: "Operations",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service", "System Administrator", "Super Admin", "Branch Operations Officer"]
+      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service", "System Administrator", "Super Admin", "Branch Operations Officer", "Workshop & CNG Operations Officer"]
     },
 
     { 

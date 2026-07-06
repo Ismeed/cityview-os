@@ -87,7 +87,9 @@ export function Header({
     "Customer Service",
     "Inventory Officer",
     "Technician",
-    "System Administrator"
+    "System Administrator",
+    "Branch Operations Officer",
+    "Workshop & CNG Operations Officer"
   ];
 
   const branches = [
