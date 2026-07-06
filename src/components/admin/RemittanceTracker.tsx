@@ -374,7 +374,50 @@ export function RemittanceTracker({ selectedBranch = "ALL" }: RemittanceTrackerP
 
         {/* Data list view */}
         <div className="overflow-x-auto">
-          {displayedItems.length === 0 ? (
+          {contracts.length === 0 ? (
+            <div className="p-8 md:p-12 text-center max-w-2xl mx-auto space-y-6">
+              <div className="h-16 w-16 rounded-full bg-emerald-500/10 text-emerald flex items-center justify-center mx-auto border border-emerald/20">
+                <Wallet className="h-8 w-8" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-display text-xl font-bold text-foreground">No Active Hire Purchase Leases</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Before you can record daily remittances, the platform requires active Hire Purchase contracts. Since the database has been cleared for your manual QA run, please follow these steps to set up your first lease:
+                </p>
+              </div>
+
+              <div className="text-left bg-muted/40 border border-border p-5 rounded-2xl space-y-4">
+                <div className="flex gap-3">
+                  <div className="h-6 w-6 rounded-full bg-emerald text-white text-xs font-bold flex items-center justify-center shrink-0">1</div>
+                  <div>
+                    <h5 className="font-bold text-xs text-foreground">Add a Driver</h5>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Go to the **Drivers** tab and register a new driver account.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 border-t border-border/60 pt-4">
+                  <div className="h-6 w-6 rounded-full bg-emerald text-white text-xs font-bold flex items-center justify-center shrink-0">2</div>
+                  <div>
+                    <h5 className="font-bold text-xs text-foreground">Add a Vehicle</h5>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Go to the **Fleet** tab and register a vehicle with status set to **"Available"**.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 border-t border-border/60 pt-4">
+                  <div className="h-6 w-6 rounded-full bg-emerald text-white text-xs font-bold flex items-center justify-center shrink-0">3</div>
+                  <div>
+                    <h5 className="font-bold text-xs text-foreground">Create Hire Purchase Contract</h5>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Go to the **Hire Purchase Ledger** tab, click **"Assign New Lease"**, select your driver and vehicle, and click create.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 border-t border-border/60 pt-4">
+                  <div className="h-6 w-6 rounded-full bg-emerald text-white text-xs font-bold flex items-center justify-center shrink-0">4</div>
+                  <div>
+                    <h5 className="font-bold text-xs text-foreground">Record Remittance</h5>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Return to this **Daily Remittances** board. You will now see the driver's name listed with a **"Record Payment"** button.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : displayedItems.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground">
               <UserCheck className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
               <p className="text-sm font-semibold">No contracts match your query and criteria.</p>
