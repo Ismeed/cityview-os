@@ -176,38 +176,38 @@ const saveLocalStorageData = <T>(key: string, data: T): void => {
 };
 
 export class ERPStore {
-  static getBranches = () => loadLocalStorageData<Branch[]>("cityview_erp_branches", initialBranches);
-  static saveBranches = (data: Branch[]) => saveLocalStorageData("cityview_erp_branches", data);
+  static getBranches = () => loadLocalStorageData<Branch[]>("cityview_erp_branches_v2", initialBranches);
+  static saveBranches = (data: Branch[]) => saveLocalStorageData("cityview_erp_branches_v2", data);
 
-  static getEmployees = () => loadLocalStorageData<Employee[]>("cityview_erp_employees", initialEmployees);
-  static saveEmployees = (data: Employee[]) => saveLocalStorageData("cityview_erp_employees", data);
+  static getEmployees = () => loadLocalStorageData<Employee[]>("cityview_erp_employees_v2", initialEmployees);
+  static saveEmployees = (data: Employee[]) => saveLocalStorageData("cityview_erp_employees_v2", data);
 
-  static getDrivers = () => loadLocalStorageData<Driver[]>("cityview_erp_drivers", initialDrivers);
-  static saveDrivers = (data: Driver[]) => saveLocalStorageData("cityview_erp_drivers", data);
+  static getDrivers = () => loadLocalStorageData<Driver[]>("cityview_erp_drivers_v2", initialDrivers);
+  static saveDrivers = (data: Driver[]) => saveLocalStorageData("cityview_erp_drivers_v2", data);
 
-  static getVehicles = () => loadLocalStorageData<Vehicle[]>("cityview_erp_vehicles", initialVehicles);
-  static saveVehicles = (data: Vehicle[]) => saveLocalStorageData("cityview_erp_vehicles", data);
+  static getVehicles = () => loadLocalStorageData<Vehicle[]>("cityview_erp_vehicles_v2", initialVehicles);
+  static saveVehicles = (data: Vehicle[]) => saveLocalStorageData("cityview_erp_vehicles_v2", data);
 
-  static getShifts = () => loadLocalStorageData<Shift[]>("cityview_erp_shifts", initialShifts);
-  static saveShifts = (data: Shift[]) => saveLocalStorageData("cityview_erp_shifts", data);
+  static getShifts = () => loadLocalStorageData<Shift[]>("cityview_erp_shifts_v2", initialShifts);
+  static saveShifts = (data: Shift[]) => saveLocalStorageData("cityview_erp_shifts_v2", data);
 
-  static getHPContracts = () => loadLocalStorageData<HirePurchaseContract[]>("cityview_erp_hp_contracts", initialHPContracts);
-  static saveHPContracts = (data: HirePurchaseContract[]) => saveLocalStorageData("cityview_erp_hp_contracts", data);
+  static getHPContracts = () => loadLocalStorageData<HirePurchaseContract[]>("cityview_erp_hp_contracts_v2", initialHPContracts);
+  static saveHPContracts = (data: HirePurchaseContract[]) => saveLocalStorageData("cityview_erp_hp_contracts_v2", data);
 
-  static getJobCards = () => loadLocalStorageData<JobCard[]>("cityview_erp_job_cards", initialJobCards);
-  static saveJobCards = (data: JobCard[]) => saveLocalStorageData("cityview_erp_job_cards", data);
+  static getJobCards = () => loadLocalStorageData<JobCard[]>("cityview_erp_job_cards_v2", initialJobCards);
+  static saveJobCards = (data: JobCard[]) => saveLocalStorageData("cityview_erp_job_cards_v2", data);
 
-  static getConversions = () => loadLocalStorageData<CNGConversion[]>("cityview_erp_conversions", initialConversions);
-  static saveConversions = (data: CNGConversion[]) => saveLocalStorageData("cityview_erp_conversions", data);
+  static getConversions = () => loadLocalStorageData<CNGConversion[]>("cityview_erp_conversions_v2", initialConversions);
+  static saveConversions = (data: CNGConversion[]) => saveLocalStorageData("cityview_erp_conversions_v2", data);
 
-  static getInventory = () => loadLocalStorageData<InventoryItem[]>("cityview_erp_inventory", initialInventory);
-  static saveInventory = (data: InventoryItem[]) => saveLocalStorageData("cityview_erp_inventory", data);
+  static getInventory = () => loadLocalStorageData<InventoryItem[]>("cityview_erp_inventory_v2", initialInventory);
+  static saveInventory = (data: InventoryItem[]) => saveLocalStorageData("cityview_erp_inventory_v2", data);
 
-  static getTransactions = () => loadLocalStorageData<Transaction[]>("cityview_erp_transactions", initialTransactions);
-  static saveTransactions = (data: Transaction[]) => saveLocalStorageData("cityview_erp_transactions", data);
+  static getTransactions = () => loadLocalStorageData<Transaction[]>("cityview_erp_transactions_v2", initialTransactions);
+  static saveTransactions = (data: Transaction[]) => saveLocalStorageData("cityview_erp_transactions_v2", data);
 
-  static getAuditLogs = () => loadLocalStorageData<AuditLog[]>("cityview_erp_audit_logs", initialAuditLogs);
-  static saveAuditLogs = (data: AuditLog[]) => saveLocalStorageData("cityview_erp_audit_logs", data);
+  static getAuditLogs = () => loadLocalStorageData<AuditLog[]>("cityview_erp_audit_logs_v2", initialAuditLogs);
+  static saveAuditLogs = (data: AuditLog[]) => saveLocalStorageData("cityview_erp_audit_logs_v2", data);
 
   static addAuditLog = (user: string, role: string, action: string, details: string) => {
     const logs = ERPStore.getAuditLogs();
@@ -227,8 +227,8 @@ export class ERPStore {
     ERPStore.saveTransactions([tx, ...transactions]);
   };
 
-  static getUsers = () => loadLocalStorageData<MockUser[]>("cityview_erp_users", mockUsers);
-  static saveUsers = (data: MockUser[]) => saveLocalStorageData("cityview_erp_users", data);
+  static getUsers = () => loadLocalStorageData<MockUser[]>("cityview_erp_users_v2", mockUsers);
+  static saveUsers = (data: MockUser[]) => saveLocalStorageData("cityview_erp_users_v2", data);
 }
 
 export interface MockUser {

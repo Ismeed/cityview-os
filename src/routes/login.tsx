@@ -49,7 +49,7 @@ function LoginPage() {
           setLoading(false);
           return;
         }
-        localStorage.setItem("cityview_user_session", JSON.stringify(user));
+        localStorage.setItem("cityview_user_session_v2", JSON.stringify(user));
         toast.success("Access Granted", {
           description: `Logged in as ${user.name} (${user.role})`
         });
@@ -79,7 +79,7 @@ function LoginPage() {
     // Auto-login after a brief delay to demonstrate the autofill
     setTimeout(() => {
       setLoading(true);
-      localStorage.setItem("cityview_user_session", JSON.stringify(user));
+      localStorage.setItem("cityview_user_session_v2", JSON.stringify(user));
       toast.success("Access Granted", {
         description: `Logged in as ${user.name} (${user.role})`
       });

@@ -60,7 +60,7 @@ function AdminPanel() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const sessionStr = localStorage.getItem("cityview_user_session");
+      const sessionStr = localStorage.getItem("cityview_user_session_v2");
       if (!sessionStr) {
         navigate({ to: "/login" });
       } else {
@@ -100,7 +100,7 @@ function AdminPanel() {
   }, [selectedRole, allowedTabs, activeTab, isInitialized]);
 
   const handleLogout = () => {
-    localStorage.removeItem("cityview_user_session");
+    localStorage.removeItem("cityview_user_session_v2");
     navigate({ to: "/login" });
   };
 

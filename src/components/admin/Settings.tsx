@@ -210,18 +210,18 @@ export function Settings({ currentUser }: SettingsProps) {
     try {
       const backupData: Record<string, string | null> = {};
       const keys = [
-        "cityview_erp_branches",
-        "cityview_erp_employees",
-        "cityview_erp_drivers",
-        "cityview_erp_vehicles",
-        "cityview_erp_shifts",
-        "cityview_erp_hp_contracts",
-        "cityview_erp_job_cards",
-        "cityview_erp_conversions",
-        "cityview_erp_inventory",
-        "cityview_erp_transactions",
-        "cityview_erp_audit_logs",
-        "cityview_erp_users"
+        "cityview_erp_branches_v2",
+        "cityview_erp_employees_v2",
+        "cityview_erp_drivers_v2",
+        "cityview_erp_vehicles_v2",
+        "cityview_erp_shifts_v2",
+        "cityview_erp_hp_contracts_v2",
+        "cityview_erp_job_cards_v2",
+        "cityview_erp_conversions_v2",
+        "cityview_erp_inventory_v2",
+        "cityview_erp_transactions_v2",
+        "cityview_erp_audit_logs_v2",
+        "cityview_erp_users_v2"
       ];
       
       keys.forEach(k => {
@@ -280,18 +280,18 @@ export function Settings({ currentUser }: SettingsProps) {
     if (!isAdmin) return;
     if (confirm("WARNING: This will delete all customized local records and reset mock data back to factory defaults. Proceed?")) {
       const keys = [
-        "cityview_erp_branches",
-        "cityview_erp_employees",
-        "cityview_erp_drivers",
-        "cityview_erp_vehicles",
-        "cityview_erp_shifts",
-        "cityview_erp_hp_contracts",
-        "cityview_erp_job_cards",
-        "cityview_erp_conversions",
-        "cityview_erp_inventory",
-        "cityview_erp_transactions",
-        "cityview_erp_audit_logs",
-        "cityview_erp_users"
+        "cityview_erp_branches_v2",
+        "cityview_erp_employees_v2",
+        "cityview_erp_drivers_v2",
+        "cityview_erp_vehicles_v2",
+        "cityview_erp_shifts_v2",
+        "cityview_erp_hp_contracts_v2",
+        "cityview_erp_job_cards_v2",
+        "cityview_erp_conversions_v2",
+        "cityview_erp_inventory_v2",
+        "cityview_erp_transactions_v2",
+        "cityview_erp_audit_logs_v2",
+        "cityview_erp_users_v2"
       ];
       keys.forEach(k => localStorage.removeItem(k));
       toast.info("Database Reset", { description: "Clearing local cache. System reloading..." });
