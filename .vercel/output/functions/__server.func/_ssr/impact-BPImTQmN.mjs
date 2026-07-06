@@ -2,7 +2,7 @@ import { r as require_jsx_runtime } from "../_libs/react+tanstack__react-query.m
 import { n as PageHero } from "./section-B6sxK-Cb.mjs";
 import { t as Counter } from "./counter-B-Gf7BFB.mjs";
 import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { yt as ArrowRight } from "../_libs/lucide-react.mjs";
+import { St as ArrowRight } from "../_libs/lucide-react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/impact-BPImTQmN.js
 var import_jsx_runtime = require_jsx_runtime();
 function Impact() {

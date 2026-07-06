@@ -7,7 +7,7 @@ import { BranchManagement } from "../components/admin/BranchManagement";
 import { EmployeeManagement } from "../components/admin/EmployeeManagement";
 import { DriverManagement } from "../components/admin/DriverManagement";
 import { FleetManagement } from "../components/admin/FleetManagement";
-import { ShiftManagement } from "../components/admin/ShiftManagement";
+import { RemittanceTracker } from "../components/admin/RemittanceTracker";
 import { HirePurchase } from "../components/admin/HirePurchase";
 import { WorkshopConversions } from "../components/admin/WorkshopConversions";
 import { Inventory } from "../components/admin/Inventory";
@@ -34,6 +34,7 @@ function AdminPanel() {
   const [selectedBranch, setSelectedBranch] = useState("ALL");
   const [selectedRole, setSelectedRole] = useState("Managing Director (CEO)");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Permission mapper per role
   const permissions: Record<string, AdminTab[]> = {
@@ -132,7 +133,7 @@ function AdminPanel() {
       case "fleet":
         return <FleetManagement selectedBranch={selectedBranch} />;
       case "shifts":
-        return <ShiftManagement selectedBranch={selectedBranch} />;
+        return <RemittanceTracker selectedBranch={selectedBranch} />;
       case "hp":
         return <HirePurchase selectedBranch={selectedBranch} />;
       case "workshop":
@@ -159,12 +160,14 @@ function AdminPanel() {
   }
 
   return (
-    <div className="flex min-h-screen bg-mist/20">
+    <div className="flex min-h-screen bg-muted/40 dark:bg-background">
       {/* Dynamic Collapsible Sidebar */}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         selectedRole={selectedRole} 
+        mobileOpen={mobileSidebarOpen}
+        setMobileOpen={setMobileSidebarOpen}
       />
 
       {/* Main Workspace Column */}
@@ -177,10 +180,11 @@ function AdminPanel() {
           setSelectedRole={setSelectedRole}
           currentUser={currentUser}
           onLogout={handleLogout}
+          onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
         />
 
         {/* Tab Viewport */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
           {renderTabContent()}
         </main>
       </div>

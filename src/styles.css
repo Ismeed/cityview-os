@@ -103,6 +103,7 @@
   --shadow-elevated: 0 30px 80px -30px color-mix(in oklab, var(--forest-deep) 40%, transparent);
   --shadow-soft: 0 10px 30px -12px color-mix(in oklab, var(--charcoal) 18%, transparent);
   --shadow-glow: 0 0 60px -10px color-mix(in oklab, var(--emerald) 45%, transparent);
+  --theme-invert: 0;
 }
 
 .dark {
@@ -123,6 +124,7 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: var(--emerald);
+  --theme-invert: 1;
 }
 
 @layer base {
@@ -147,6 +149,31 @@
   ::selection {
     background: color-mix(in oklab, var(--emerald) 40%, transparent);
     color: var(--forest-deep);
+  }
+
+  /* Automatic Dark/Light mode overrides for standard layout classes */
+  .bg-white {
+    background-color: var(--color-card) !important;
+  }
+  
+  .text-charcoal {
+    color: var(--color-foreground) !important;
+  }
+
+  .bg-mist {
+    background-color: var(--color-muted) !important;
+  }
+
+  /* Make sure inputs match theme color schema */
+  input, select, textarea {
+    background-color: var(--color-card) !important;
+    color: var(--color-foreground) !important;
+    border-color: var(--color-border) !important;
+  }
+  
+  /* Calendar input icon compatibility */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(var(--theme-invert, 0));
   }
 }
 

@@ -36,9 +36,11 @@ interface SidebarProps {
   activeTab: AdminTab;
   setActiveTab: (tab: AdminTab) => void;
   selectedRole: string;
+  mobileOpen?: boolean;
+  setMobileOpen?: (open: boolean) => void;
 }
 
-export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, setMobileOpen }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   // Group items by category
@@ -81,8 +83,8 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
     },
     { 
       id: "shifts", 
-      label: "Shift Controller", 
-      icon: CalendarDays, 
+      label: "Daily Remittances", 
+      icon: Wallet, 
       category: "Operations",
       allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "System Administrator", "Super Admin", "Branch Operations Officer"]
     },
@@ -146,7 +148,19 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
   ];
 
   return (
-    <aside className={`relative flex flex-col border-r border-border bg-charcoal text-white transition-all duration-300 ${collapsed ? "w-20" : "w-72"}`}>
+    <>
+      {/* Mobile Backdrop */}
+      {mobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden"
+          onClick={() => setMobileOpen?.(false)}
+        />
+      )}
+
+      <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-charcoal text-white transition-all duration-300
+        md:relative md:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        ${collapsed ? "md:w-20" : "md:w-72"} w-72`}
+      >
       {/* Sidebar header logo */}
       <div className="flex h-20 items-center justify-between border-b border-white/5 px-6">
         <div className="flex items-center gap-3 overflow-hidden">
@@ -187,7 +201,10 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id as AdminTab)}
+                    onClick={() => {
+                      setActiveTab(item.id as AdminTab);
+                      setMobileOpen?.(false);
+                    }}
                     className={`group w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-semibold transition ${
                       isActive 
                         ? "bg-forest text-white shadow-glow-soft" 
@@ -212,6 +229,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
           <div className="mt-0.5 font-mono text-[9px]">v1.2.0-Prod · Katsina, NG</div>
         </div>
       )}
-    </aside>
+      </aside>
+    </>
   );
 }

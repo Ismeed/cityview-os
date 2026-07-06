@@ -1,0 +1,17 @@
+{
+  "short_name": "CityView ERP",
+  "name": "CityView CNG Operations Control Center",
+  "description": "Enterprise Operations Platform for CityView CNG Auto Synergy",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/login",
+  "background_color": "#0f2b1f",
+  "theme_color": "#0f2b1f",
+  "display": "standalone",
+  "orientation": "portrait"
+}
