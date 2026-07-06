@@ -17,6 +17,7 @@ interface HeaderProps {
   setSelectedBranch: (branch: string) => void;
   selectedRole: string;
   setSelectedRole: (role: string) => void;
+  currentUser?: any;
   onLogout: () => void;
 }
 
@@ -25,12 +26,18 @@ export function Header({
   setSelectedBranch,
   selectedRole,
   setSelectedRole,
+  currentUser,
   onLogout
 }: HeaderProps) {
   const [currentTime, setCurrentTime] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [showBranchSelector, setShowBranchSelector] = useState(false);
+
+  const isSuperOrAdmin = currentUser?.role === "Super Admin" || 
+                         currentUser?.role === "Managing Director (CEO)" || 
+                         currentUser?.role === "System Administrator" || 
+                         currentUser?.role === "Executive Director";
 
   // Load inventory alerts
   const inventory = ERPStore.getInventory();
@@ -104,88 +111,108 @@ export function Header({
 
         {/* Global Branch Filter */}
         <div className="relative">
-          <button 
-            onClick={() => {
-              setShowBranchSelector(!showBranchSelector);
-              setShowRoleSelector(false);
-              setShowNotifications(false);
-            }}
-            className="flex items-center gap-2 rounded-2xl border border-border bg-white px-4 py-2 text-xs font-semibold text-charcoal hover:bg-mist/40 transition"
-          >
-            <MapPin className="h-4 w-4 text-emerald" />
-            <span>
-              {selectedBranch === "ALL" 
-                ? "Global Hubs" 
-                : branches.find(b => b.id === selectedBranch)?.name || selectedBranch}
-            </span>
-            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-          </button>
-          
-          {showBranchSelector && (
-            <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-white p-2 shadow-elevated animate-fade-down z-50">
-              <span className="block px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-1">
-                Select Active Hub
+          {isSuperOrAdmin ? (
+            <>
+              <button 
+                onClick={() => {
+                  setShowBranchSelector(!showBranchSelector);
+                  setShowRoleSelector(false);
+                  setShowNotifications(false);
+                }}
+                className="flex items-center gap-2 rounded-2xl border border-border bg-white px-4 py-2 text-xs font-semibold text-charcoal hover:bg-mist/40 transition cursor-pointer"
+              >
+                <MapPin className="h-4 w-4 text-emerald" />
+                <span>
+                  {selectedBranch === "ALL" 
+                    ? "Global Hubs" 
+                    : branches.find(b => b.id === selectedBranch)?.name || selectedBranch}
+                </span>
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              </button>
+              
+              {showBranchSelector && (
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-white p-2 shadow-elevated animate-fade-down z-50">
+                  <span className="block px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-1">
+                    Select Active Hub
+                  </span>
+                  {branches.map(b => (
+                    <button
+                      key={b.id}
+                      onClick={() => {
+                        setSelectedBranch(b.id);
+                        setShowBranchSelector(false);
+                      }}
+                      className={`w-full text-left rounded-xl px-3 py-2 text-xs font-medium transition ${
+                        selectedBranch === b.id 
+                          ? "bg-forest-deep text-white" 
+                          : "text-muted-foreground hover:bg-mist hover:text-foreground"
+                      }`}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center gap-2 rounded-2xl border border-border bg-white/50 px-4 py-2 text-xs font-semibold text-charcoal/80 select-none">
+              <MapPin className="h-4 w-4 text-emerald/60" />
+              <span>
+                {selectedBranch === "ALL" 
+                  ? "Global Hubs" 
+                  : branches.find(b => b.id === selectedBranch)?.name || selectedBranch}
               </span>
-              {branches.map(b => (
-                <button
-                  key={b.id}
-                  onClick={() => {
-                    setSelectedBranch(b.id);
-                    setShowBranchSelector(false);
-                  }}
-                  className={`w-full text-left rounded-xl px-3 py-2 text-xs font-medium transition ${
-                    selectedBranch === b.id 
-                      ? "bg-forest-deep text-white" 
-                      : "text-muted-foreground hover:bg-mist hover:text-foreground"
-                  }`}
-                >
-                  {b.name}
-                </button>
-              ))}
             </div>
           )}
         </div>
 
         {/* Dynamic Role Switcher (RBAC Simulator) */}
-        <div className="relative">
-          <button 
-            onClick={() => {
-              setShowRoleSelector(!showRoleSelector);
-              setShowBranchSelector(false);
-              setShowNotifications(false);
-            }}
-            className="flex items-center gap-2 rounded-2xl bg-emerald-soft/60 px-4 py-2 text-xs font-bold text-forest-deep hover:bg-emerald-soft transition border border-emerald/15"
-          >
-            <Shield className="h-4 w-4 text-forest" />
-            <span>Role: {selectedRole}</span>
-            <ChevronDown className="h-3 w-3 text-forest" />
-          </button>
+        {isSuperOrAdmin ? (
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setShowRoleSelector(!showRoleSelector);
+                setShowBranchSelector(false);
+                setShowNotifications(false);
+              }}
+              className="flex items-center gap-2 rounded-2xl bg-emerald-soft/60 px-4 py-2 text-xs font-bold text-forest-deep hover:bg-emerald-soft transition border border-emerald/15 cursor-pointer"
+            >
+              <Shield className="h-4 w-4 text-forest" />
+              <span>Role: {selectedRole}</span>
+              <ChevronDown className="h-3 w-3 text-forest" />
+            </button>
 
-          {showRoleSelector && (
-            <div className="absolute right-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-2xl border border-border bg-white p-2 shadow-elevated animate-fade-down z-50">
-              <span className="block px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-1">
-                Simulate System Permission
-              </span>
-              {roles.map(r => (
-                <button
-                  key={r}
-                  onClick={() => {
-                    setSelectedRole(r);
-                    setShowRoleSelector(false);
-                    ERPStore.addAuditLog("System Admin", "Super Administrator", "RBAC Change Simulation", `Changed active simulation role to: ${r}`);
-                  }}
-                  className={`w-full text-left rounded-xl px-3 py-2 text-xs font-medium transition ${
-                    selectedRole === r 
-                      ? "bg-emerald text-forest-deep font-bold" 
-                      : "text-muted-foreground hover:bg-mist hover:text-foreground"
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            {showRoleSelector && (
+              <div className="absolute right-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-2xl border border-border bg-white p-2 shadow-elevated animate-fade-down z-50">
+                <span className="block px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-1">
+                  Simulate System Permission
+                </span>
+                {roles.map(r => (
+                  <button
+                    key={r}
+                    onClick={() => {
+                      setSelectedRole(r);
+                      setShowRoleSelector(false);
+                      ERPStore.addAuditLog("System Admin", "Super Administrator", "RBAC Change Simulation", `Changed active simulation role to: ${r}`);
+                    }}
+                    className={`w-full text-left rounded-xl px-3 py-2 text-xs font-medium transition ${
+                      selectedRole === r 
+                        ? "bg-emerald text-forest-deep font-bold" 
+                        : "text-muted-foreground hover:bg-mist hover:text-foreground"
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-2xl bg-emerald-soft/30 px-4 py-2 text-xs font-semibold text-forest border border-emerald/10 select-none">
+            <Shield className="h-4 w-4 text-forest/60" />
+            <span>Role: {selectedRole}</span>
+          </div>
+        )}
 
         {/* Notifications Button */}
         <div className="relative">
@@ -195,7 +222,7 @@ export function Header({
               setShowBranchSelector(false);
               setShowRoleSelector(false);
             }}
-            className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-white hover:bg-mist/30 transition text-charcoal"
+            className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-white hover:bg-mist/30 transition text-charcoal cursor-pointer"
           >
             <Bell className="h-5 w-5" />
             {totalAlerts > 0 && (
@@ -262,13 +289,17 @@ export function Header({
         {/* User Card */}
         <div className="flex items-center gap-3 border-l border-border pl-5">
           <div className="hidden text-right md:block">
-            <div className="text-xs font-bold text-foreground">Admin Desk</div>
-            <div className="text-[9px] font-bold text-emerald uppercase tracking-wider">CityView Synergy</div>
+            <div className="text-xs font-bold text-foreground">
+              {currentUser?.name || "Admin Desk"}
+            </div>
+            <div className="text-[9px] font-bold text-emerald uppercase tracking-wider">
+              {currentUser?.email || "CityView Synergy"}
+            </div>
           </div>
           <button 
             onClick={onLogout}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-ink/5 hover:bg-ink/10 transition text-muted-foreground hover:text-red-500"
-            title="Return to Public Site"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-ink/5 hover:bg-ink/10 transition text-muted-foreground hover:text-red-500 cursor-pointer"
+            title="Log Out"
           >
             <LogOut className="h-4.5 w-4.5" />
           </button>

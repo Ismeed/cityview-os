@@ -1,9 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, JobCard, CNGConversion, Employee, InventoryItem } from "./mockData";
 import { Search, Plus, Wrench, Fuel, ClipboardList, Check, User, ArrowRight, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 
-export function WorkshopConversions() {
+interface WorkshopConversionsProps {
+  selectedBranch?: string;
+}
+
+export function WorkshopConversions({ selectedBranch = "ALL" }: WorkshopConversionsProps) {
+  const branchMap: Record<string, string> = {
+    "BR-KT": "Katsina HQ",
+    "BR-GB": "Gombe Hub"
+  };
+  const activeBranchName = branchMap[selectedBranch];
+
   const [jobCards, setJobCards] = useState<JobCard[]>(ERPStore.getJobCards());
   const [conversions, setConversions] = useState<CNGConversion[]>(ERPStore.getConversions());
   
@@ -35,8 +45,19 @@ export function WorkshopConversions() {
   });
 
   // Technical staff and inventory resources
-  const technicians = ERPStore.getEmployees().filter(e => e.department === "Technical");
+  const technicians = ERPStore.getEmployees().filter(e => 
+    e.department === "Technical" && 
+    (activeBranchName ? e.branch === activeBranchName : true)
+  );
   const inventory = ERPStore.getInventory();
+
+  // Set default technician/engineer based on filtered technical staff
+  useEffect(() => {
+    if (technicians.length > 0) {
+      setNewJob(prev => ({ ...prev, assignedTechnicianId: technicians[0].id }));
+      setNewConv(prev => ({ ...prev, assignedEngineerId: technicians[0].id }));
+    }
+  }, [selectedBranch]);
 
   // Create Job Card
   const handleCreateJobCard = (e: React.FormEvent) => {
@@ -52,6 +73,7 @@ export function WorkshopConversions() {
       laborCharges: Number(newJob.laborCharges),
       partsUsed: [],
       status: "Inspecting",
+      branch: activeBranchName || "Katsina HQ",
       date: new Date().toISOString().split("T")[0]
     };
 
@@ -80,7 +102,7 @@ export function WorkshopConversions() {
       vehiclePlate: "",
       vehicleModel: "",
       issueDescription: "",
-      assignedTechnicianId: "EMP-05",
+      assignedTechnicianId: technicians[0]?.id || "EMP-05",
       laborCharges: 8000
     });
     setShowJobForm(false);
@@ -99,6 +121,7 @@ export function WorkshopConversions() {
       cost: Number(newConv.cost),
       status: "Inspection",
       assignedEngineers: [technicians.find(t => t.id === newConv.assignedEngineerId)?.name || "Engr. Yusuf Bello"],
+      branch: activeBranchName || "Katsina HQ",
       dateStarted: new Date().toISOString().split("T")[0]
     };
 
@@ -162,7 +185,7 @@ export function WorkshopConversions() {
             amount: c.cost,
             category: "CNG Conversion" as const,
             description: `CNG conversion completion payout: ${c.vehiclePlate} (${c.customerName})`,
-            branch: "Katsina HQ",
+            branch: c.branch,
             date: new Date().toISOString().split("T")[0]
           };
           ERPStore.saveTransactions([newTransaction, ...transactions]);
@@ -202,7 +225,7 @@ export function WorkshopConversions() {
           amount: totalInvoice,
           category: "Workshop Repairs" as const,
           description: `Workshop invoice collection: Job card ${jb.id} (${jb.customerName})`,
-          branch: "Katsina HQ",
+          branch: jb.branch,
           date: new Date().toISOString().split("T")[0]
         };
         ERPStore.saveTransactions([newTransaction, ...transactions]);
@@ -491,8 +514,10 @@ export function WorkshopConversions() {
       {/* Main Content Layout */}
       {techSection === "job-cards" ? (
         <div className="grid gap-6 md:grid-cols-2">
-          {jobCards.map(jb => {
-            const tech = technicians.find(t => t.id === jb.assignedTechnicianId);
+          {jobCards
+            .filter(jb => activeBranchName ? jb.branch === activeBranchName : true)
+            .map(jb => {
+              const tech = technicians.find(t => t.id === jb.assignedTechnicianId);
             const totalInvoice = jb.laborCharges + jb.partsUsed.reduce((sum, p) => sum + p.cost * p.quantity, 0);
             const isClosed = jb.status === "Handed Over";
             
@@ -569,8 +594,10 @@ export function WorkshopConversions() {
       ) : (
         /* CNG Conversions Stepper List */
         <div className="space-y-6">
-          {conversions.map(c => {
-            const steps: CNGConversion["status"][] = [
+          {conversions
+            .filter(c => activeBranchName ? c.branch === activeBranchName : true)
+            .map(c => {
+              const steps: CNGConversion["status"][] = [
               "Inspection",
               "Quotation Approved",
               "Installation",

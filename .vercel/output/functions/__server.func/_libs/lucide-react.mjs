@@ -1117,6 +1117,24 @@ var Leaf = createLucideIcon("leaf", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Lock = createLucideIcon("lock", [["rect", {
+	width: "18",
+	height: "11",
+	x: "3",
+	y: "11",
+	rx: "2",
+	ry: "2",
+	key: "1w4ew1"
+}], ["path", {
+	d: "M7 11V7a5 5 0 0 1 10 0v4",
+	key: "fwvmzm"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var LogOut = createLucideIcon("log-out", [
 	["path", {
 		d: "m16 17 5-5-5-5",
@@ -1714,4 +1732,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { CircleCheck as $, Menu as A, Gauge as B, Search as C, Play as D, Plus as E, LayoutDashboard as F, FileCheck as G, FileText as H, Key as I, Cpu as J, DollarSign as K, Info as L, Mail as M, LogOut as N, Phone as O, Leaf as P, ClipboardList as Q, IdCard as R, Send as S, RefreshCw as T, FilePenLine as U, Fuel as V, FileDown as W, Cog as X, Compass as Y, Clock as Z, Shield as _, ArrowUpRight as _t, UsersRound as a, Check as at, Settings as b, UserCheck as c, Calendar as ct, TriangleAlert as d, Building2 as dt, CircleCheckBig as et, TrendingUp as f, Briefcase as ft, Sparkles as g, Award as gt, SquareUserRound as h, Barcode as ht, Users as i, ChevronDown as it, MapPin as j, MessageCircle as k, Upload as l, CalendarDays as lt, Target as m, Bell as mt, Wrench as n, ChevronRight as nt, User as o, ChartLine as ot, TrendingDown as p, Boxes as pt, Database as q, Wallet as r, ChevronLeft as rt, UserPlus as s, ChartColumn as st, X as t, CircleAlert as tt, Truck as u, Calculator as ut, ShieldCheck as v, ArrowRight as vt, Save as w, Settings2 as x, ShieldAlert as y, Activity as yt, Handshake as z };
+export { ClipboardList as $, Menu as A, Handshake as B, Search as C, Play as D, Plus as E, Leaf as F, FileDown as G, Fuel as H, LayoutDashboard as I, Database as J, FileCheck as K, Key as L, Mail as M, LogOut as N, Phone as O, Lock as P, Clock as Q, Info as R, Send as S, RefreshCw as T, FileText as U, Gauge as V, FilePenLine as W, Compass as X, Cpu as Y, Cog as Z, Shield as _, Award as _t, UsersRound as a, ChevronDown as at, Settings as b, Activity as bt, UserCheck as c, ChartColumn as ct, TriangleAlert as d, Calculator as dt, CircleCheck as et, TrendingUp as f, Building2 as ft, Sparkles as g, Barcode as gt, SquareUserRound as h, Bell as ht, Users as i, ChevronLeft as it, MapPin as j, MessageCircle as k, Upload as l, Calendar as lt, Target as m, Boxes as mt, Wrench as n, CircleAlert as nt, User as o, Check as ot, TrendingDown as p, Briefcase as pt, DollarSign as q, Wallet as r, ChevronRight as rt, UserPlus as s, ChartLine as st, X as t, CircleCheckBig as tt, Truck as u, CalendarDays as ut, ShieldCheck as v, ArrowUpRight as vt, Save as w, Settings2 as x, ShieldAlert as y, ArrowRight as yt, IdCard as z };

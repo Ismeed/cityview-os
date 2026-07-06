@@ -3,7 +3,17 @@ import { ERPStore, HirePurchaseContract, Driver, Vehicle } from "./mockData";
 import { Search, Calculator, Calendar, FileSignature, CheckCircle, AlertTriangle, ArrowUpRight, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
-export function HirePurchase() {
+interface HirePurchaseProps {
+  selectedBranch?: string;
+}
+
+export function HirePurchase({ selectedBranch = "ALL" }: HirePurchaseProps) {
+  const branchMap: Record<string, string> = {
+    "BR-KT": "Katsina HQ",
+    "BR-GB": "Gombe Hub"
+  };
+  const activeBranchName = branchMap[selectedBranch];
+
   const [contracts, setContracts] = useState<HirePurchaseContract[]>(ERPStore.getHPContracts());
   const [search, setSearch] = useState("");
   
@@ -17,10 +27,10 @@ export function HirePurchase() {
   // Filtered list
   const filtered = contracts.filter(c => {
     const driver = ERPStore.getDrivers().find(d => d.id === c.driverId);
-    return (
-      c.id.toLowerCase().includes(search.toLowerCase()) ||
-      (driver && driver.name.toLowerCase().includes(search.toLowerCase()))
-    );
+    const matchesSearch = c.id.toLowerCase().includes(search.toLowerCase()) ||
+      (driver && driver.name.toLowerCase().includes(search.toLowerCase()));
+    const matchesBranch = !activeBranchName || c.branch === activeBranchName;
+    return matchesSearch && matchesBranch;
   });
 
   // Calculator logic

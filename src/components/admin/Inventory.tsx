@@ -3,7 +3,17 @@ import { ERPStore, InventoryItem } from "./mockData";
 import { Search, Plus, Boxes, ShieldAlert, FileText, ShoppingCart, RefreshCw, Barcode } from "lucide-react";
 import { toast } from "sonner";
 
-export function Inventory() {
+interface InventoryProps {
+  selectedBranch?: string;
+}
+
+export function Inventory({ selectedBranch = "ALL" }: InventoryProps) {
+  const branchMap: Record<string, string> = {
+    "BR-KT": "Katsina HQ",
+    "BR-GB": "Gombe Hub"
+  };
+  const activeBranchName = branchMap[selectedBranch];
+
   const [inventory, setInventory] = useState<InventoryItem[]>(ERPStore.getInventory());
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("ALL");
@@ -65,7 +75,7 @@ export function Inventory() {
           amount: expenseCost,
           category: "Parts Purchase" as const,
           description: `Restocked ${qty} units of ${item.name} from ${item.supplier}`,
-          branch: "Katsina HQ",
+          branch: activeBranchName || "Katsina HQ",
           date: new Date().toISOString().split("T")[0]
         };
         ERPStore.saveTransactions([newTransaction, ...transactions]);

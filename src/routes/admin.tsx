@@ -29,9 +29,11 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPanel() {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [selectedBranch, setSelectedBranch] = useState("ALL");
   const [selectedRole, setSelectedRole] = useState("Managing Director (CEO)");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Permission mapper per role
   const permissions: Record<string, AdminTab[]> = {
@@ -47,22 +49,56 @@ function AdminPanel() {
     "Customer Service": ["drivers", "hp", "workshop", "crm"],
     "Inventory Officer": ["inventory"],
     "Technician": ["fleet", "workshop"],
-    "System Administrator": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"]
+    "System Administrator": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
+    "Super Admin": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
+    "Branch Operations Officer": ["fleet", "drivers", "shifts", "hp"],
+    "Workshop & CNG Operations Officer": ["workshop", "inventory"],
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const sessionStr = localStorage.getItem("cityview_user_session");
+      if (!sessionStr) {
+        navigate({ to: "/login" });
+      } else {
+        try {
+          const user = JSON.parse(sessionStr);
+          setCurrentUser(user);
+          setSelectedRole(user.role);
+          setSelectedBranch(user.branch);
+          
+          // Set initial tab based on role permissions
+          const allowed = permissions[user.role] || [];
+          if (allowed.length > 0) {
+            if (user.role === "Super Admin" || user.role === "Managing Director (CEO)" || user.role === "System Administrator" || user.role === "Executive Director") {
+              setActiveTab("overview");
+            } else {
+              setActiveTab(allowed[0]);
+            }
+          }
+        } catch (e) {
+          console.error(e);
+          navigate({ to: "/login" });
+        }
+      }
+      setIsInitialized(true);
+    }
+  }, [navigate]);
 
   const allowedTabs = permissions[selectedRole] || [];
 
   // Reset tab to first allowed tab if role change restricts current active tab
   useEffect(() => {
-    if (!allowedTabs.includes(activeTab)) {
+    if (isInitialized && !allowedTabs.includes(activeTab)) {
       if (allowedTabs.length > 0) {
         setActiveTab(allowedTabs[0]);
       }
     }
-  }, [selectedRole, allowedTabs, activeTab]);
+  }, [selectedRole, allowedTabs, activeTab, isInitialized]);
 
   const handleLogout = () => {
-    navigate({ to: "/" });
+    localStorage.removeItem("cityview_user_session");
+    navigate({ to: "/login" });
   };
 
   // Render the appropriate panel based on selected active tab
@@ -92,27 +128,35 @@ function AdminPanel() {
       case "employees":
         return <EmployeeManagement />;
       case "drivers":
-        return <DriverManagement />;
+        return <DriverManagement selectedBranch={selectedBranch} />;
       case "fleet":
-        return <FleetManagement />;
+        return <FleetManagement selectedBranch={selectedBranch} />;
       case "shifts":
-        return <ShiftManagement />;
+        return <ShiftManagement selectedBranch={selectedBranch} />;
       case "hp":
-        return <HirePurchase />;
+        return <HirePurchase selectedBranch={selectedBranch} />;
       case "workshop":
-        return <WorkshopConversions />;
+        return <WorkshopConversions selectedBranch={selectedBranch} />;
       case "inventory":
-        return <Inventory />;
+        return <Inventory selectedBranch={selectedBranch} />;
       case "finance":
-        return <Finance />;
+        return <Finance selectedBranch={selectedBranch} />;
       case "crm":
-        return <CRM />;
+        return <CRM selectedBranch={selectedBranch} />;
       case "settings":
         return <Settings />;
       default:
         return <ExecutiveDashboard branchId={selectedBranch} />;
     }
   };
+
+  if (!isInitialized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-ink">
+        <div className="inline-block w-8 h-8 border-4 border-emerald border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-mist/20">
@@ -131,6 +175,7 @@ function AdminPanel() {
           setSelectedBranch={setSelectedBranch}
           selectedRole={selectedRole}
           setSelectedRole={setSelectedRole}
+          currentUser={currentUser}
           onLogout={handleLogout}
         />
 

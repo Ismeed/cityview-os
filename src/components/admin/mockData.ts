@@ -63,6 +63,7 @@ export interface HirePurchaseContract {
   id: string;
   driverId: string;
   vehicleId: string;
+  branch: string;
   totalAmount: number;
   balancePaid: number;
   dailyTarget: number;
@@ -83,6 +84,7 @@ export interface JobCard {
   laborCharges: number;
   partsUsed: { partId: string; name: string; quantity: number; cost: number }[];
   status: "Inspecting" | "Diagnostics" | "Awaiting Approval" | "Repairing" | "Completed" | "Handed Over";
+  branch: string;
   date: string;
 }
 
@@ -96,9 +98,11 @@ export interface CNGConversion {
   cost: number;
   status: "Inspection" | "Quotation Approved" | "Installation" | "Testing & Calibration" | "Certification" | "Handed Over";
   assignedEngineers: string[];
+  branch: string;
   dateStarted: string;
   dateCompleted?: string;
 }
+
 
 export interface InventoryItem {
   id: string;
@@ -181,6 +185,7 @@ const initialHPContracts: HirePurchaseContract[] = [
     id: "HP-301",
     driverId: "DRV-101",
     vehicleId: "VEH-Keke-01",
+    branch: "Katsina HQ",
     totalAmount: 4750000,
     balancePaid: 1560000,
     dailyTarget: 12000,
@@ -198,6 +203,7 @@ const initialHPContracts: HirePurchaseContract[] = [
     id: "HP-302",
     driverId: "DRV-102",
     vehicleId: "VEH-Keke-02",
+    branch: "Katsina HQ",
     totalAmount: 4750000,
     balancePaid: 2100000,
     dailyTarget: 12000,
@@ -215,6 +221,7 @@ const initialHPContracts: HirePurchaseContract[] = [
     id: "HP-303",
     driverId: "DRV-103",
     vehicleId: "VEH-Keke-03",
+    branch: "Gombe Hub",
     totalAmount: 4750000,
     balancePaid: 940000,
     dailyTarget: 12000,
@@ -232,6 +239,7 @@ const initialHPContracts: HirePurchaseContract[] = [
     id: "HP-304",
     driverId: "DRV-104",
     vehicleId: "VEH-Keke-04",
+    branch: "Gombe Hub",
     totalAmount: 4750000,
     balancePaid: 820000,
     dailyTarget: 12000,
@@ -248,13 +256,13 @@ const initialHPContracts: HirePurchaseContract[] = [
 ];
 
 const initialJobCards: JobCard[] = [
-  { id: "JB-1001", customerName: "Garba Musa", customerPhone: "08091112223", vehiclePlate: "KT-124-AAA", vehicleModel: "Toyota Corolla 2012", issueDescription: "Idle vibration and check engine light on.", assignedTechnicianId: "EMP-05", laborCharges: 8000, partsUsed: [{ partId: "INV-OIL", name: "Mobil 1 Engine Oil 5W-30", quantity: 1, cost: 15000 }], status: "Repairing", date: "2026-07-05" },
-  { id: "JB-1002", customerName: "Salisu Bello", customerPhone: "07032223334", vehiclePlate: "GB-981-TRC", vehicleModel: "Tricycle (TVS King)", issueDescription: "Brake pads completely worn, clutch cable stiff.", assignedTechnicianId: "EMP-06", laborCharges: 3500, partsUsed: [{ partId: "INV-BRK", name: "Premium Brake Pads (Keke)", quantity: 2, cost: 5000 }], status: "Completed", date: "2026-07-04" }
+  { id: "JB-1001", customerName: "Garba Musa", customerPhone: "08091112223", vehiclePlate: "KT-124-AAA", vehicleModel: "Toyota Corolla 2012", issueDescription: "Idle vibration and check engine light on.", assignedTechnicianId: "EMP-05", laborCharges: 8000, partsUsed: [{ partId: "INV-OIL", name: "Mobil 1 Engine Oil 5W-30", quantity: 1, cost: 15000 }], status: "Repairing", branch: "Katsina HQ", date: "2026-07-05" },
+  { id: "JB-1002", customerName: "Salisu Bello", customerPhone: "07032223334", vehiclePlate: "GB-981-TRC", vehicleModel: "Tricycle (TVS King)", issueDescription: "Brake pads completely worn, clutch cable stiff.", assignedTechnicianId: "EMP-06", laborCharges: 3500, partsUsed: [{ partId: "INV-BRK", name: "Premium Brake Pads (Keke)", quantity: 2, cost: 5000 }], status: "Completed", branch: "Gombe Hub", date: "2026-07-04" }
 ];
 
 const initialConversions: CNGConversion[] = [
-  { id: "CNG-2001", customerName: "Katsina State Ministry of Transport", vehiclePlate: "KT-100-MTR", vehicleModel: "Toyota Hiace Bus 2018", cngKitType: "Sequential 4-Cylinder Kit", cylinderSize: "90L Steel Cylinder", cost: 950000, status: "Installation", assignedEngineers: ["Engr. Yusuf Bello", "Chidi Nwachukwu"], dateStarted: "2026-07-03" },
-  { id: "CNG-2002", customerName: "Mallam Lawan", vehiclePlate: "GB-800-LAW", vehicleModel: "Suzuki Every Mini Bus", cngKitType: "Direct Injection Kit", cylinderSize: "60L Lightweight Composites", cost: 750000, status: "Inspection", assignedEngineers: ["Bala Mohammed"], dateStarted: "2026-07-05" }
+  { id: "CNG-2001", customerName: "Katsina State Ministry of Transport", vehiclePlate: "KT-100-MTR", vehicleModel: "Toyota Hiace Bus 2018", cngKitType: "Sequential 4-Cylinder Kit", cylinderSize: "90L Steel Cylinder", cost: 950000, status: "Installation", assignedEngineers: ["Engr. Yusuf Bello", "Chidi Nwachukwu"], branch: "Katsina HQ", dateStarted: "2026-07-03" },
+  { id: "CNG-2002", customerName: "Mallam Lawan", vehiclePlate: "GB-800-LAW", vehicleModel: "Suzuki Every Mini Bus", cngKitType: "Direct Injection Kit", cylinderSize: "60L Lightweight Composites", cost: 750000, status: "Inspection", assignedEngineers: ["Bala Mohammed"], branch: "Gombe Hub", dateStarted: "2026-07-05" }
 ];
 
 const initialInventory: InventoryItem[] = [
@@ -354,3 +362,62 @@ export class ERPStore {
     ERPStore.saveAuditLogs([newLog, ...logs]);
   };
 }
+
+export interface MockUser {
+  email: string;
+  name: string;
+  role: string;
+  department: string;
+  branch: string; // "BR-KT", "BR-GB", or "ALL"
+  branchName: string; // "Katsina HQ", "Gombe Hub", or "Global Enterprise"
+  passwordHash: string; // plaintext
+}
+
+export const mockUsers: MockUser[] = [
+  {
+    email: "fleet.katsina@cityview.ng",
+    name: "Alhaji Bello",
+    role: "Branch Operations Officer",
+    department: "Hire Purchase & Fleet Management",
+    branch: "BR-KT",
+    branchName: "Katsina HQ",
+    passwordHash: "Password123"
+  },
+  {
+    email: "workshop.katsina@cityview.ng",
+    name: "Ado Yahaya",
+    role: "Workshop & CNG Operations Officer",
+    department: "CNG Conversion & Automobile Workshop",
+    branch: "BR-KT",
+    branchName: "Katsina HQ",
+    passwordHash: "Password123"
+  },
+  {
+    email: "fleet.gombe@cityview.ng",
+    name: "Umar Gombe",
+    role: "Branch Operations Officer",
+    department: "Hire Purchase & Fleet Management",
+    branch: "BR-GB",
+    branchName: "Gombe Hub",
+    passwordHash: "Password123"
+  },
+  {
+    email: "workshop.gombe@cityview.ng",
+    name: "Mustapha Ibrahim",
+    role: "Workshop & CNG Operations Officer",
+    department: "CNG Conversion & Automobile Workshop",
+    branch: "BR-GB",
+    branchName: "Gombe Hub",
+    passwordHash: "Password123"
+  },
+  {
+    email: "admin@cityview.ng",
+    name: "Engr. Yusuf Bello",
+    role: "Super Admin",
+    department: "Executive",
+    branch: "ALL",
+    branchName: "Global Enterprise",
+    passwordHash: "Password123"
+  }
+];
+

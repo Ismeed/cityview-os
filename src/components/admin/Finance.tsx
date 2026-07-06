@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, Transaction } from "./mockData";
 import { Plus, Search, Filter, TrendingUp, TrendingDown, DollarSign, Wallet, CalendarDays, ArrowUpRight } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "sonner";
 
-export function Finance() {
+interface FinanceProps {
+  selectedBranch?: string;
+}
+
+export function Finance({ selectedBranch = "ALL" }: FinanceProps) {
+  const branchMap: Record<string, string> = {
+    "BR-KT": "Katsina HQ",
+    "BR-GB": "Gombe Hub"
+  };
+  const activeBranchName = branchMap[selectedBranch];
+
   const [transactions, setTransactions] = useState<Transaction[]>(ERPStore.getTransactions());
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -16,8 +26,14 @@ export function Finance() {
     amount: 15000,
     category: "Other" as Transaction["category"],
     description: "",
-    branch: "Katsina HQ"
+    branch: activeBranchName || "Katsina HQ"
   });
+
+  useEffect(() => {
+    if (activeBranchName) {
+      setNewTrans(prev => ({ ...prev, branch: activeBranchName }));
+    }
+  }, [activeBranchName]);
 
   const handleAddTransaction = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,26 +61,30 @@ export function Finance() {
       amount: 15000,
       category: "Other",
       description: "",
-      branch: "Katsina HQ"
+      branch: activeBranchName || "Katsina HQ"
     });
     setShowAddForm(false);
   };
 
+  const branchTransactions = activeBranchName 
+    ? transactions.filter(t => t.branch === activeBranchName)
+    : transactions;
+
   // Group revenues for pie chart
   const revenueSources = [
-    { name: "CNG Conversions", value: transactions.filter(t => t.type === "Revenue" && t.category === "CNG Conversion").reduce((sum, t) => sum + t.amount, 0) },
-    { name: "Hire Purchase", value: transactions.filter(t => t.type === "Revenue" && t.category === "Hire Purchase").reduce((sum, t) => sum + t.amount, 0) },
-    { name: "Workshop Repairs", value: transactions.filter(t => t.type === "Revenue" && t.category === "Workshop Repairs").reduce((sum, t) => sum + t.amount, 0) },
-    { name: "Fleet Remittances", value: transactions.filter(t => t.type === "Revenue" && (t.category === "Fleet Remittance" || t.category === "Other")).reduce((sum, t) => sum + t.amount, 0) }
+    { name: "CNG Conversions", value: branchTransactions.filter(t => t.type === "Revenue" && t.category === "CNG Conversion").reduce((sum, t) => sum + t.amount, 0) },
+    { name: "Hire Purchase", value: branchTransactions.filter(t => t.type === "Revenue" && t.category === "Hire Purchase").reduce((sum, t) => sum + t.amount, 0) },
+    { name: "Workshop Repairs", value: branchTransactions.filter(t => t.type === "Revenue" && t.category === "Workshop Repairs").reduce((sum, t) => sum + t.amount, 0) },
+    { name: "Fleet Remittances", value: branchTransactions.filter(t => t.type === "Revenue" && (t.category === "Fleet Remittance" || t.category === "Other")).reduce((sum, t) => sum + t.amount, 0) }
   ].filter(source => source.value > 0);
 
   const COLORS = ["var(--color-forest)", "var(--color-emerald)", "var(--color-blue-accent)", "#f59e0b"];
 
-  const totalRevenue = transactions.filter(t => t.type === "Revenue").reduce((sum, t) => sum + t.amount, 0);
-  const totalExpense = transactions.filter(t => t.type === "Expense").reduce((sum, t) => sum + t.amount, 0);
+  const totalRevenue = branchTransactions.filter(t => t.type === "Revenue").reduce((sum, t) => sum + t.amount, 0);
+  const totalExpense = branchTransactions.filter(t => t.type === "Expense").reduce((sum, t) => sum + t.amount, 0);
   const netProfit = totalRevenue - totalExpense;
 
-  const filtered = transactions.filter(t => {
+  const filtered = branchTransactions.filter(t => {
     const matchesSearch = t.description.toLowerCase().includes(search.toLowerCase()) || t.category.toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === "ALL" || t.type === typeFilter;
     return matchesSearch && matchesType;
@@ -143,14 +163,23 @@ export function Finance() {
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Operating Hub Branch</label>
-              <select
-                value={newTrans.branch}
-                onChange={(e) => setNewTrans(prev => ({ ...prev, branch: e.target.value }))}
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
-              >
-                <option value="Katsina HQ">Katsina HQ</option>
-                <option value="Gombe Hub">Gombe Hub</option>
-              </select>
+              {activeBranchName ? (
+                <input
+                  type="text"
+                  readOnly
+                  value={activeBranchName}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs bg-mist/30 text-muted-foreground focus:outline-none"
+                />
+              ) : (
+                <select
+                  value={newTrans.branch}
+                  onChange={(e) => setNewTrans(prev => ({ ...prev, branch: e.target.value }))}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
+                >
+                  <option value="Katsina HQ">Katsina HQ</option>
+                  <option value="Gombe Hub">Gombe Hub</option>
+                </select>
+              )}
             </div>
             <div className="sm:col-span-2">
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Narration / Description</label>

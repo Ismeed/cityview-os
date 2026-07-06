@@ -3,7 +3,17 @@ import { ERPStore, Shift, Vehicle, Driver } from "./mockData";
 import { Plus, Check, Play, UserCheck, Gauge, Wallet, Clock, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
-export function ShiftManagement() {
+interface ShiftManagementProps {
+  selectedBranch?: string;
+}
+
+export function ShiftManagement({ selectedBranch = "ALL" }: ShiftManagementProps) {
+  const branchMap: Record<string, string> = {
+    "BR-KT": "Katsina HQ",
+    "BR-GB": "Gombe Hub"
+  };
+  const activeBranchName = branchMap[selectedBranch];
+
   const [shifts, setShifts] = useState<Shift[]>(ERPStore.getShifts());
   const [vehicles, setVehicles] = useState<Vehicle[]>(ERPStore.getVehicles());
   const [drivers, setDrivers] = useState<Driver[]>(ERPStore.getDrivers());
@@ -27,11 +37,18 @@ export function ShiftManagement() {
     notes: ""
   });
 
-  // Filter available drivers & vehicles
-  const availableVehicles = vehicles.filter(v => v.status === "Available");
-  // Drivers without an active shift
+  // Filter available drivers & vehicles by branch
+  const availableVehicles = vehicles.filter(v => 
+    v.status === "Available" && 
+    (activeBranchName ? v.branch === activeBranchName : true)
+  );
+  // Drivers without an active shift, filtered by branch
   const activeShiftDriverIds = shifts.filter(s => s.status === "In Progress").map(s => s.driverId);
-  const availableDrivers = drivers.filter(d => d.status === "Active" && !activeShiftDriverIds.includes(d.id));
+  const availableDrivers = drivers.filter(d => 
+    d.status === "Active" && 
+    !activeShiftDriverIds.includes(d.id) &&
+    (activeBranchName ? d.branch === activeBranchName : true)
+  );
 
   const handleStartShift = (e: React.FormEvent) => {
     e.preventDefault();
@@ -374,8 +391,10 @@ export function ShiftManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
-              {shifts.map(shift => {
-                const driverObj = drivers.find(d => d.id === shift.driverId);
+              {shifts
+                .filter(s => activeBranchName ? s.branch === activeBranchName : true)
+                .map(shift => {
+                  const driverObj = drivers.find(d => d.id === shift.driverId);
                 const vehicleObj = vehicles.find(v => v.id === shift.vehicleId);
                 const isOngoing = shift.status === "In Progress";
                 

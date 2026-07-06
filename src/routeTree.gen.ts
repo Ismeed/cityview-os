@@ -13,6 +13,7 @@ import { Route as WorkshopRouteImport } from './routes/workshop'
 import { Route as WhyCngRouteImport } from './routes/why-cng'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImpactRouteImport } from './routes/impact'
 import { Route as HirePurchaseRouteImport } from './routes/hire-purchase'
 import { Route as GalleryRouteImport } from './routes/gallery'
@@ -44,6 +45,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImpactRoute = ImpactRouteImport.update({
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof GalleryRoute
   '/hire-purchase': typeof HirePurchaseRoute
   '/impact': typeof ImpactRoute
+  '/login': typeof LoginRoute
   '/services': typeof ServicesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/why-cng': typeof WhyCngRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/hire-purchase': typeof HirePurchaseRoute
   '/impact': typeof ImpactRoute
+  '/login': typeof LoginRoute
   '/services': typeof ServicesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/why-cng': typeof WhyCngRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/gallery': typeof GalleryRoute
   '/hire-purchase': typeof HirePurchaseRoute
   '/impact': typeof ImpactRoute
+  '/login': typeof LoginRoute
   '/services': typeof ServicesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/why-cng': typeof WhyCngRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/hire-purchase'
     | '/impact'
+    | '/login'
     | '/services'
     | '/sitemap.xml'
     | '/why-cng'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/hire-purchase'
     | '/impact'
+    | '/login'
     | '/services'
     | '/sitemap.xml'
     | '/why-cng'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/hire-purchase'
     | '/impact'
+    | '/login'
     | '/services'
     | '/sitemap.xml'
     | '/why-cng'
@@ -231,6 +243,7 @@ export interface RootRouteChildren {
   GalleryRoute: typeof GalleryRoute
   HirePurchaseRoute: typeof HirePurchaseRoute
   ImpactRoute: typeof ImpactRoute
+  LoginRoute: typeof LoginRoute
   ServicesRoute: typeof ServicesRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   WhyCngRoute: typeof WhyCngRoute
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/services'
       preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/impact': {
@@ -378,6 +398,7 @@ const rootRouteChildren: RootRouteChildren = {
   GalleryRoute: GalleryRoute,
   HirePurchaseRoute: HirePurchaseRoute,
   ImpactRoute: ImpactRoute,
+  LoginRoute: LoginRoute,
   ServicesRoute: ServicesRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   WhyCngRoute: WhyCngRoute,
