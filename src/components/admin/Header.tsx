@@ -128,7 +128,8 @@ export function Header({
     "Technician",
     "System Administrator",
     "Branch Operations Officer",
-    "Workshop & CNG Operations Officer"
+    "Workshop & CNG Operations Officer",
+    "Receptionist"
   ];
 
   const branches = [

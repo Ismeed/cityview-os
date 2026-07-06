@@ -13,6 +13,7 @@ import { WorkshopConversions } from "../components/admin/WorkshopConversions";
 import { Inventory } from "../components/admin/Inventory";
 import { Finance } from "../components/admin/Finance";
 import { CRM } from "../components/admin/CRM";
+import { FrontDesk } from "../components/admin/FrontDesk";
 import { Settings } from "../components/admin/Settings";
 import { ShieldAlert, Database, HelpCircle } from "lucide-react";
 import { ERPStore } from "../components/admin/mockData";
@@ -54,6 +55,7 @@ function AdminPanel() {
     "Super Admin": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
     "Branch Operations Officer": ["fleet", "drivers", "shifts", "hp"],
     "Workshop & CNG Operations Officer": ["workshop", "inventory", "hp"],
+    "Receptionist": ["frontdesk", "hp", "drivers", "workshop", "crm"],
   };
 
   useEffect(() => {
@@ -144,6 +146,8 @@ function AdminPanel() {
         return <Finance selectedBranch={selectedBranch} />;
       case "crm":
         return <CRM selectedBranch={selectedBranch} />;
+      case "frontdesk":
+        return <FrontDesk selectedBranch={selectedBranch} />;
       case "settings":
         return <Settings />;
       default:

@@ -361,6 +361,11 @@ export class ERPStore {
     };
     ERPStore.saveAuditLogs([newLog, ...logs]);
   };
+
+  static addTransaction = (tx: Transaction) => {
+    const transactions = ERPStore.getTransactions();
+    ERPStore.saveTransactions([tx, ...transactions]);
+  };
 }
 
 export interface MockUser {
@@ -417,6 +422,24 @@ export const mockUsers: MockUser[] = [
     department: "Executive",
     branch: "ALL",
     branchName: "Global Enterprise",
+    passwordHash: "Password123"
+  },
+  {
+    email: "reception.katsina@cityview.ng",
+    name: "Hauwa Sani",
+    role: "Receptionist",
+    department: "Front Desk & Customer Relations",
+    branch: "BR-KT",
+    branchName: "Katsina HQ",
+    passwordHash: "Password123"
+  },
+  {
+    email: "reception.gombe@cityview.ng",
+    name: "Amina Umar",
+    role: "Receptionist",
+    department: "Front Desk & Customer Relations",
+    branch: "BR-GB",
+    branchName: "Gombe Hub",
     passwordHash: "Password123"
   }
 ];

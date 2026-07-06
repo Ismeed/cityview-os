@@ -1227,6 +1227,34 @@ var MessageCircle = createLucideIcon("message-circle", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var MonitorSmartphone = createLucideIcon("monitor-smartphone", [
+	["path", {
+		d: "M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8",
+		key: "10dyio"
+	}],
+	["path", {
+		d: "M10 19v-3.96 3.15",
+		key: "1irgej"
+	}],
+	["path", {
+		d: "M7 19h5",
+		key: "qswx4l"
+	}],
+	["rect", {
+		width: "6",
+		height: "10",
+		x: "16",
+		y: "12",
+		rx: "2",
+		key: "1egngj"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Moon = createLucideIcon("moon", [["path", {
 	d: "M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401",
 	key: "kfwtm"
@@ -1788,4 +1816,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Cpu as $, MessageCircle as A, IdCard as B, Send as C, Activity as Ct, Plus as D, RefreshCw as E, Lock as F, Fuel as G, Handshake as H, Leaf as I, FilePenLine as J, FileText as K, LayoutDashboard as L, MapPin as M, Mail as N, Phone as O, LogOut as P, Database as Q, Key as R, Settings2 as S, ArrowRight as St, Save as T, Gauge as U, History as V, Funnel as W, FileCheck as X, FileDown as Y, DollarSign as Z, Sparkles as _, Boxes as _t, UsersRound as a, CircleCheckBig as at, ShieldAlert as b, Award as bt, UserCheck as c, ChevronLeft as ct, TriangleAlert as d, ChartLine as dt, Compass as et, TrendingUp as f, ChartColumn as ft, SquareUserRound as g, Briefcase as gt, Sun as h, Building2 as ht, Users as i, CircleCheck as it, Menu as j, Moon as k, Upload as l, ChevronDown as lt, Target as m, Calculator as mt, Wrench as n, Clock as nt, User as o, CircleAlert as ot, TrendingDown as p, Calendar as pt, FileSpreadsheet as q, Wallet as r, ClipboardList as rt, UserPlus as s, ChevronRight as st, X as t, Cog as tt, Truck as u, Check as ut, Shield as v, Bell as vt, Search as w, Settings as x, ArrowUpRight as xt, ShieldCheck as y, Barcode as yt, Info as z };
+export { Database as $, MonitorSmartphone as A, Info as B, Send as C, ArrowRight as Ct, Plus as D, RefreshCw as E, LogOut as F, Funnel as G, History as H, Lock as I, FileSpreadsheet as J, Fuel as K, Leaf as L, Menu as M, MapPin as N, Phone as O, Mail as P, DollarSign as Q, LayoutDashboard as R, Settings2 as S, ArrowUpRight as St, Save as T, Handshake as U, IdCard as V, Gauge as W, FileDown as X, FilePenLine as Y, FileCheck as Z, Sparkles as _, Briefcase as _t, UsersRound as a, CircleCheck as at, ShieldAlert as b, Barcode as bt, UserCheck as c, ChevronRight as ct, TriangleAlert as d, Check as dt, Cpu as et, TrendingUp as f, ChartLine as ft, SquareUserRound as g, Building2 as gt, Sun as h, Calculator as ht, Users as i, ClipboardList as it, MessageCircle as j, Moon as k, Upload as l, ChevronLeft as lt, Target as m, Calendar as mt, Wrench as n, Cog as nt, User as o, CircleCheckBig as ot, TrendingDown as p, ChartColumn as pt, FileText as q, Wallet as r, Clock as rt, UserPlus as s, CircleAlert as st, X as t, Compass as tt, Truck as u, ChevronDown as ut, Shield as v, Boxes as vt, Search as w, Activity as wt, Settings as x, Award as xt, ShieldCheck as y, Bell as yt, Key as z };

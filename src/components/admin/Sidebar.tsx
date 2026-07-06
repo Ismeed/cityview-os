@@ -14,7 +14,8 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
-  Database
+  Database,
+  MonitorSmartphone
 } from "lucide-react";
 import { useState } from "react";
 
@@ -30,6 +31,7 @@ export type AdminTab =
   | "inventory" 
   | "finance" 
   | "crm" 
+  | "frontdesk"
   | "settings";
 
 interface SidebarProps {
@@ -79,7 +81,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
       label: "Drivers Directory", 
       icon: Users, // Reuse or change icon
       category: "Operations",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Customer Service", "System Administrator", "Super Admin", "Branch Operations Officer"]
+      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Customer Service", "System Administrator", "Super Admin", "Branch Operations Officer", "Receptionist"]
     },
     { 
       id: "shifts", 
@@ -93,7 +95,15 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
       label: "Hire Purchase Ledger", 
       icon: FileSignature, 
       category: "Operations",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service", "System Administrator", "Super Admin", "Branch Operations Officer", "Workshop & CNG Operations Officer"]
+      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service", "System Administrator", "Super Admin", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Receptionist"]
+    },
+
+    {
+      id: "frontdesk",
+      label: "Front Desk",
+      icon: MonitorSmartphone,
+      category: "Operations",
+      allowedRoles: ["Receptionist"]
     },
 
     { 
@@ -101,7 +111,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
       label: "Workshop & CNG", 
       icon: Wrench, 
       category: "Technical",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Workshop Manager", "Technician", "Customer Service", "System Administrator", "Super Admin", "Workshop & CNG Operations Officer"]
+      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Workshop Manager", "Technician", "Customer Service", "System Administrator", "Super Admin", "Workshop & CNG Operations Officer", "Receptionist"]
     },
     { 
       id: "inventory", 
@@ -123,7 +133,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
       label: "CRM Portal", 
       icon: UserSquare2, 
       category: "Finance",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Customer Service", "Cashier", "System Administrator", "Super Admin"]
+      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Customer Service", "Cashier", "System Administrator", "Super Admin", "Receptionist"]
     },
     { 
       id: "settings", 
