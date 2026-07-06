@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { ERPStore } from "./mockData";
 import { useTheme } from "../../hooks/useTheme";
+import { toast } from "sonner";
 
 interface HeaderProps {
   selectedBranch: string;
@@ -40,6 +41,44 @@ export function Header({
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [showBranchSelector, setShowBranchSelector] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(true);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    if (typeof window !== "undefined" && window.matchMedia("(display-mode: standalone)").matches) {
+      setIsInstallable(false);
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallPWA = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === "accepted") {
+          setIsInstallable(false);
+        }
+        setDeferredPrompt(null);
+      });
+    } else {
+      toast.info("PWA Installation Guide", {
+        description: "To install CityView ERP, click the share/options menu button in your browser and select 'Add to Home Screen' or 'Install'."
+      });
+    }
+  };
 
   const isSuperOrAdmin = currentUser?.role === "Super Admin" || 
                          currentUser?.role === "Managing Director (CEO)" || 
@@ -231,6 +270,21 @@ export function Header({
             <Shield className="h-4 w-4 text-forest/60" />
             <span>Role: {selectedRole}</span>
           </div>
+        )}
+
+        {/* PWA Install Button */}
+        {isInstallable && (
+          <button
+            onClick={handleInstallPWA}
+            className="hidden sm:flex items-center gap-1.5 rounded-2xl border border-border bg-emerald-500/10 hover:bg-emerald-500/20 px-3.5 py-2 text-xs font-bold text-emerald transition cursor-pointer"
+            title="Install Web App (PWA)"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Install App
+          </button>
         )}
 
         {/* Theme Toggle Button */}
