@@ -302,6 +302,38 @@ const initialAuditLogs: AuditLog[] = [
 
 import { getCurrentUser } from "../../lib/auth";
 
+// ── Data Schema Version ───────────────────────────────────────────────────────
+// Bump this string whenever seed data or the Employee/Driver/etc. interface
+// grows new required fields that must appear on first load for existing users.
+const DATA_SCHEMA_VERSION = "v3"; // bumped: added NYSC/Trainee employees
+const SCHEMA_VERSION_KEY  = "cityview_erp_schema_version";
+
+// On first page load (per browser session), check if the stored schema version
+// matches the current one. If not, purge all known data keys so the fresh seed
+// data is re-loaded from the source arrays below.
+if (typeof window !== "undefined") {
+  const storedVersion = localStorage.getItem(SCHEMA_VERSION_KEY);
+  if (storedVersion !== DATA_SCHEMA_VERSION) {
+    const KEYS_TO_PURGE = [
+      "cityview_erp_branches",
+      "cityview_erp_employees",
+      "cityview_erp_drivers",
+      "cityview_erp_vehicles",
+      "cityview_erp_shifts",
+      "cityview_erp_hp_contracts",
+      "cityview_erp_job_cards",
+      "cityview_erp_conversions",
+      "cityview_erp_inventory",
+      "cityview_erp_transactions",
+      "cityview_erp_audit_logs",
+      "cityview_erp_sync_queue",
+    ];
+    KEYS_TO_PURGE.forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(SCHEMA_VERSION_KEY, DATA_SCHEMA_VERSION);
+    console.info(`[CityView ERP] Data schema migrated to ${DATA_SCHEMA_VERSION}. Seed data reloaded.`);
+  }
+}
+
 // Helper to interact with LocalStorage
 const loadLocalStorageData = <T>(key: string, initialData: T): T => {
   if (typeof window === "undefined") return initialData;
