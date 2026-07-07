@@ -99,17 +99,36 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
     }).format(value);
   };
 
-  // Recharts Monthly Flow Data
-  const monthlyData = [
-    { name: "Feb", Revenue: 2100000, Expense: 1300000 },
-    { name: "Mar", Revenue: 2800000, Expense: 1700000 },
-    { name: "Apr", Revenue: 3400000, Expense: 2100000 },
-    { name: "May", Revenue: 4200000, Expense: 2300000 },
-    { name: "Jun", Revenue: 5100000, Expense: 2900000 },
-    { name: "Jul", Revenue: revenueVal, Expense: expenseVal }
-  ];
+  // ── Monthly Financial Performance Chart ─────────────────────────────────────
+  // Build monthly aggregates from actual transaction records.
+  // We show the last 6 calendar months (oldest → newest) so the chart always
+  // reflects the real data that has been entered into the system.
+  const buildMonthlyData = () => {
+    const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+    const months: { name: string; key: string; Revenue: number; Expense: number }[] = [];
 
-  // Recharts Branch Comparison Data
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      months.push({ name: MONTH_NAMES[d.getMonth()], key, Revenue: 0, Expense: 0 });
+    }
+
+    transactions.forEach(t => {
+      // date is stored as "YYYY-MM-DD"
+      const monthKey = t.date.slice(0, 7);
+      const slot = months.find(m => m.key === monthKey);
+      if (!slot) return;
+      if (t.type === "Revenue") slot.Revenue += t.amount;
+      else if (t.type === "Expense") slot.Expense += t.amount;
+    });
+
+    return months.map(({ name, Revenue, Expense }) => ({ name, Revenue, Expense }));
+  };
+  const monthlyData = buildMonthlyData();
+
+  // ── Branch Comparison Bar Chart ──────────────────────────────────────────────
   const branchData = [
     {
       name: "Katsina HQ",
@@ -122,6 +141,75 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
       Expense: rawTransactions.filter(t => t.branch === "Gombe Hub" && t.type === "Expense").reduce((a, b) => a + b.amount, 0)
     }
   ];
+
+  // ── Branch Yield Rankings ────────────────────────────────────────────────────
+  // Calculate revenue per branch from live data; rank by highest revenue.
+  const branchRevenues = rawBranches
+    .filter(b => b.status === "Active")
+    .map(b => ({
+      name: `${b.name} (Active)`,
+      revenue: rawTransactions
+        .filter(t => t.branch === b.name && t.type === "Revenue")
+        .reduce((a, t) => a + t.amount, 0)
+    }))
+    .sort((a, b) => b.revenue - a.revenue);
+
+  const upcomingBranches = rawBranches
+    .filter(b => b.status === "Upcoming")
+    .slice(0, 2)
+    .map(b => ({ name: `${b.name} (Upcoming)`, revenue: 0 }));
+
+  const branchRankings = [...branchRevenues, ...upcomingBranches];
+  const maxBranchRevenue = branchRankings[0]?.revenue || 1;
+
+  // ── Top Performing Technicians ───────────────────────────────────────────────
+  // Count completed job cards per technician from the job cards store.
+  const rawJobCards = ERPStore.getJobCards();
+  const techJobCounts: Record<string, number> = {};
+  rawJobCards
+    .filter(j => j.status === "Completed")
+    .forEach(j => {
+      techJobCounts[j.assignedTechnicianId] = (techJobCounts[j.assignedTechnicianId] || 0) + 1;
+    });
+
+  const topTechnicians = rawEmployees
+    .filter(e => e.department === "Technical")
+    .map(e => ({
+      id: e.id,
+      name: e.name,
+      role: e.role,
+      branch: e.branch,
+      jobs: techJobCounts[e.id] || 0
+    }))
+    .sort((a, b) => b.jobs - a.jobs)
+    .slice(0, 3);
+
+  // ── KPI Trend Badges ─────────────────────────────────────────────────────────
+  // Compare current month revenue/expense vs previous month.
+  const MONTH_KEYS = Array.from({ length: 2 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const currentMonthRev = transactions
+    .filter(t => t.type === "Revenue" && t.date.startsWith(MONTH_KEYS[0]))
+    .reduce((a, t) => a + t.amount, 0);
+  const prevMonthRev = transactions
+    .filter(t => t.type === "Revenue" && t.date.startsWith(MONTH_KEYS[1]))
+    .reduce((a, t) => a + t.amount, 0);
+  const revTrend = prevMonthRev > 0
+    ? (((currentMonthRev - prevMonthRev) / prevMonthRev) * 100).toFixed(1)
+    : null;
+
+  const currentMonthExp = transactions
+    .filter(t => t.type === "Expense" && t.date.startsWith(MONTH_KEYS[0]))
+    .reduce((a, t) => a + t.amount, 0);
+  const prevMonthExp = transactions
+    .filter(t => t.type === "Expense" && t.date.startsWith(MONTH_KEYS[1]))
+    .reduce((a, t) => a + t.amount, 0);
+  const expTrend = prevMonthExp > 0
+    ? (((currentMonthExp - prevMonthExp) / prevMonthExp) * 100).toFixed(1)
+    : null;
 
   const handleExport = (format: "PDF" | "CSV") => {
     setExporting(true);
@@ -304,9 +392,9 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
           </div>
           <div className="mt-4">
             <h3 className="font-display text-2xl font-bold text-foreground">{formatNaira(revenueVal)}</h3>
-            <div className="flex items-center gap-1 text-[10px] font-bold text-emerald mt-2">
-              <TrendingUp className="h-3 w-3" />
-              <span>+18.4% from June</span>
+            <div className={`flex items-center gap-1 text-[10px] font-bold mt-2 ${revTrend !== null && Number(revTrend) >= 0 ? "text-emerald" : "text-red-500"}`}>
+              {revTrend !== null && Number(revTrend) >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+              <span>{revTrend !== null ? `${Number(revTrend) >= 0 ? "+" : ""}${revTrend}% vs last month` : "Current month"}</span>
             </div>
           </div>
         </div>
@@ -321,9 +409,9 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
           </div>
           <div className="mt-4">
             <h3 className="font-display text-2xl font-bold text-foreground">{formatNaira(expenseVal)}</h3>
-            <div className="flex items-center gap-1 text-[10px] font-bold text-red-500 mt-2">
-              <TrendingDown className="h-3 w-3" />
-              <span>-4.2% from June</span>
+            <div className={`flex items-center gap-1 text-[10px] font-bold mt-2 ${expTrend !== null && Number(expTrend) <= 0 ? "text-emerald" : "text-red-500"}`}>
+              {expTrend !== null && Number(expTrend) <= 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+              <span>{expTrend !== null ? `${Number(expTrend) >= 0 ? "+" : ""}${expTrend}% vs last month` : "Current month"}</span>
             </div>
           </div>
         </div>
@@ -470,48 +558,54 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
           </div>
 
           <div className="space-y-4">
+            {/* Branch Yield — computed from live transaction data */}
             <div className="border-b border-border/50 pb-4">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-2.5">Branch Yield Rating</span>
               <div className="space-y-3">
-                {[
-                  { name: "Katsina HQ (Active)", revenue: 3824000, pct: 100 },
-                  { name: "Gombe Hub (Active)", revenue: 1912500, pct: 50 },
-                  { name: "Kano (Upcoming Q3)", revenue: 0, pct: 0 }
-                ].map((item, idx) => (
+                {branchRankings.map((item) => (
                   <div key={item.name} className="flex items-center justify-between text-xs">
-                    <div className="w-1/3 font-semibold text-foreground">{item.name}</div>
+                    <div className="w-1/3 font-semibold text-foreground truncate pr-1">{item.name}</div>
                     <div className="w-1/2 bg-mist/60 h-2 rounded-full overflow-hidden mx-4">
-                      <div className="bg-forest h-full rounded-full" style={{ width: `${item.pct}%` }} />
+                      <div
+                        className="bg-forest h-full rounded-full transition-all duration-700"
+                        style={{ width: `${maxBranchRevenue > 0 ? (item.revenue / maxBranchRevenue) * 100 : 0}%` }}
+                      />
                     </div>
-                    <div className="w-1/6 text-right font-bold text-forest-deep">{item.revenue > 0 ? formatNaira(item.revenue) : "TBD"}</div>
+                    <div className="w-1/6 text-right font-bold text-forest-deep">
+                      {item.revenue > 0 ? formatNaira(item.revenue) : "TBD"}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
+            {/* Technicians — ranked by completed job cards */}
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-2.5">Top Performing Technicians</span>
               <div className="space-y-3">
-                {[
-                  { name: "Chidi Nwachukwu", role: "Senior Technician", branch: "Katsina HQ", rating: "★★★★★", jobs: 18 },
-                  { name: "Bala Mohammed", role: "Technician", branch: "Gombe Hub", rating: "★★★★☆", jobs: 12 }
-                ].map(tech => (
-                  <div key={tech.name} className="flex items-center justify-between text-xs rounded-xl border border-border/40 p-2.5 hover:bg-mist/30 transition">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-emerald-soft flex items-center justify-center font-bold text-forest-deep text-[11px]">
-                        {tech.name.split(" ").map(n => n[0]).join("")}
+                {topTechnicians.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No technician job data recorded yet.</p>
+                ) : (
+                  topTechnicians.map((tech, idx) => (
+                    <div key={tech.id} className="flex items-center justify-between text-xs rounded-xl border border-border/40 p-2.5 hover:bg-mist/30 transition">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-emerald-soft flex items-center justify-center font-bold text-forest-deep text-[11px]">
+                          {tech.name.split(" ").map(n => n[0]).join("")}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-foreground">{tech.name}</div>
+                          <div className="text-[10px] text-muted-foreground">{tech.role} · {tech.branch}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-semibold text-foreground">{tech.name}</div>
-                        <div className="text-[10px] text-muted-foreground">{tech.role} · {tech.branch}</div>
+                      <div className="text-right">
+                        <div className="font-bold text-forest">{tech.jobs} Job{tech.jobs !== 1 ? "s" : ""}</div>
+                        <div className="text-amber-500 text-[10px]">
+                          {idx === 0 ? "★★★★★" : idx === 1 ? "★★★★☆" : "★★★☆☆"}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-forest">{tech.jobs} Jobs</div>
-                      <div className="text-amber-500 text-[10px]">{tech.rating}</div>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
