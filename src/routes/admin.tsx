@@ -79,6 +79,17 @@ function AdminPanel() {
     tryGetSession();
   }, []);
 
+  const allowedTabs = user ? (ROLE_TAB_PERMISSIONS[user.role] || []) : [];
+
+  // Reset tab to first allowed tab if role change restricts current active tab
+  useEffect(() => {
+    if (user && !allowedTabs.includes(activeTab)) {
+      if (allowedTabs.length > 0) {
+        setActiveTab(allowedTabs[0] as AdminTab);
+      }
+    }
+  }, [user, allowedTabs, activeTab]);
+
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-mist/20">
@@ -89,17 +100,6 @@ function AdminPanel() {
       </div>
     );
   }
-
-  const allowedTabs = ROLE_TAB_PERMISSIONS[user.role] || [];
-
-  // Reset tab to first allowed tab if role change restricts current active tab
-  useEffect(() => {
-    if (!allowedTabs.includes(activeTab)) {
-      if (allowedTabs.length > 0) {
-        setActiveTab(allowedTabs[0] as AdminTab);
-      }
-    }
-  }, [user, allowedTabs, activeTab]);
 
   const handleLogout = () => {
     logoutUser();
