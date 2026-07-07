@@ -1,1 +1,0 @@
-var e=`/assets/cng-detail-Kl-rmRrt.png`;export{e as t};
