@@ -53,6 +53,8 @@ export const DEMO_ACCOUNTS: Record<string, AuthUser & { password: string }> = {
 export const ROLE_TAB_PERMISSIONS: Record<string, string[]> = {
   "Super Admin": [
     "overview",
+    "fleet_dashboard",
+    "workshop_dashboard",
     "branches",
     "employees",
     "fleet",
@@ -80,6 +82,27 @@ export const ROLE_TAB_PERMISSIONS: Record<string, string[]> = {
   ]
 };
 
+// Load custom user accounts from LocalStorage, fallback to DEMO_ACCOUNTS
+export function getAccounts(): Record<string, AuthUser & { password: string }> {
+  if (typeof window === "undefined") return DEMO_ACCOUNTS;
+  const stored = localStorage.getItem("cityview_auth_accounts");
+  if (!stored) {
+    localStorage.setItem("cityview_auth_accounts", JSON.stringify(DEMO_ACCOUNTS));
+    return DEMO_ACCOUNTS;
+  }
+  try {
+    return JSON.parse(stored) as Record<string, AuthUser & { password: string }>;
+  } catch (e) {
+    return DEMO_ACCOUNTS;
+  }
+}
+
+export function saveAccounts(accounts: Record<string, AuthUser & { password: string }>) {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("cityview_auth_accounts", JSON.stringify(accounts));
+  }
+}
+
 // Load session from LocalStorage
 export function getCurrentUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
@@ -94,15 +117,16 @@ export function getCurrentUser(): AuthUser | null {
 
 // Log in user and return session or error string
 export function loginUser(email: string, pass: string): AuthUser | string {
-  const matchKey = Object.keys(DEMO_ACCOUNTS).find(
-    (key) => DEMO_ACCOUNTS[key].email.toLowerCase() === email.toLowerCase()
+  const accounts = getAccounts();
+  const matchKey = Object.keys(accounts).find(
+    (key) => accounts[key].email.toLowerCase() === email.toLowerCase()
   );
 
   if (!matchKey) {
     return "Invalid email credentials. Account not registered.";
   }
 
-  const account = DEMO_ACCOUNTS[matchKey];
+  const account = accounts[matchKey];
   if (account.password !== pass) {
     return "Invalid password. Access Denied.";
   }

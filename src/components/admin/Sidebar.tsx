@@ -57,14 +57,14 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Fleet Dashboard", 
       icon: LayoutDashboard, 
       category: "Executive",
-      allowedRoles: ["Branch Operations Officer"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer"]
     },
     { 
       id: "workshop_dashboard", 
       label: "Workshop Dashboard", 
       icon: LayoutDashboard, 
       category: "Executive",
-      allowedRoles: ["Workshop & CNG Operations Officer"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer"]
     },
     { 
       id: "branches", 
@@ -97,7 +97,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
     },
     { 
       id: "shifts", 
-      label: "Shift Controller", 
+      label: "Daily Remittance", 
       icon: CalendarDays, 
       category: "Operations",
       allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier"]
@@ -109,7 +109,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       category: "Operations",
       allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service"]
     },
-
+ 
     { 
       id: "workshop", 
       label: "Workshop & CNG", 
@@ -124,7 +124,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       category: "Technical",
       allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Workshop Manager", "Inventory Officer", "Accountant"]
     },
-
+ 
     { 
       id: "finance", 
       label: "General Ledger", 
@@ -141,7 +141,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
     },
     { 
       id: "settings", 
-      label: "System Settings", 
+      label: "User Accounts & Security", 
       icon: Settings, 
       category: "System",
       allowedRoles: ["Super Admin", "System Administrator", "Managing Director (CEO)", "Executive Director"]
