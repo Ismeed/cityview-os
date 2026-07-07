@@ -7,10 +7,14 @@ import {
   Sparkles, 
   ChevronDown, 
   LogOut,
-  Menu
+  Menu,
+  Wifi,
+  WifiOff,
+  RefreshCw
 } from "lucide-react";
 import { ERPStore } from "./mockData";
 import { AuthUser } from "../../lib/auth";
+import { toast } from "sonner";
 
 interface HeaderProps {
   selectedBranch: string;
@@ -35,6 +39,11 @@ export function Header({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [showBranchSelector, setShowBranchSelector] = useState(false);
+
+  // Connectivity and synchronization states
+  const [isOnline, setIsOnline] = useState(true);
+  const [syncQueue, setSyncQueue] = useState<any[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Load inventory alerts
   const inventory = ERPStore.getInventory();
@@ -73,6 +82,62 @@ export function Header({
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Manage Online/Offline connectivity status and Live Sync Engine
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsOnline(navigator.onLine);
+      setSyncQueue(ERPStore.getSyncQueue());
+
+      const handleOnlineStatus = () => {
+        setIsOnline(true);
+        const queue = ERPStore.getSyncQueue();
+        if (queue.length > 0) {
+          setIsSyncing(true);
+          setTimeout(() => {
+            // Process queue - Simulated Cloud Synchronization
+            ERPStore.addAuditLog(
+              user.name,
+              user.role,
+              "Cloud Synchronization",
+              `Synchronized ${queue.length} offline local operations to the central cloud repository.`
+            );
+            ERPStore.saveSyncQueue([]);
+            setSyncQueue([]);
+            setIsSyncing(false);
+            toast.success("Database Connected & Synced", {
+              description: `Successfully synchronized ${queue.length} offline changes to CityView Cloud.`
+            });
+          }, 2000); // 2 second delay to simulate network transit latency
+        } else {
+          toast.success("Back Online", {
+            description: "Connection to central server re-established."
+          });
+        }
+      };
+
+      const handleOfflineStatus = () => {
+        setIsOnline(false);
+        toast.warning("Working Offline", {
+          description: "Network disconnected. Operational inputs will be queued and synchronized upon reconnection."
+        });
+      };
+
+      const handleSyncChange = () => {
+        setSyncQueue(ERPStore.getSyncQueue());
+      };
+
+      window.addEventListener("online", handleOnlineStatus);
+      window.addEventListener("offline", handleOfflineStatus);
+      window.addEventListener("cityview_sync_updated", handleSyncChange);
+
+      return () => {
+        window.removeEventListener("online", handleOnlineStatus);
+        window.removeEventListener("offline", handleOfflineStatus);
+        window.removeEventListener("cityview_sync_updated", handleSyncChange);
+      };
+    }
+  }, [user]);
 
   const roles = [
     "Managing Director (CEO)",
@@ -126,6 +191,26 @@ export function Header({
         <div className="hidden items-center gap-2 rounded-2xl bg-mist/60 px-4 py-2 text-xs font-semibold text-charcoal md:flex">
           <Clock className="h-4 w-4 text-forest" />
           <span>Katsina/Lagos: <span className="font-mono text-forest-deep">{currentTime}</span></span>
+        </div>
+
+        {/* Connection/Sync Status Badge */}
+        <div className="flex items-center">
+          {isSyncing ? (
+            <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 text-xs font-semibold text-amber-600 animate-pulse">
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              <span>Syncing Data...</span>
+            </div>
+          ) : !isOnline ? (
+            <div className="flex items-center gap-1.5 rounded-full bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-600 animate-pulse" title="Offline outbox queue holds changes">
+              <WifiOff className="h-3.5 w-3.5 text-red-500" />
+              <span>Offline {syncQueue.length > 0 && `(${syncQueue.length} pending)`}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 rounded-full bg-emerald-soft/80 border border-emerald/15 px-3 py-1.5 text-[10px] sm:text-xs font-bold text-forest-deep">
+              <Wifi className="h-3.5 w-3.5 text-forest" />
+              <span className="hidden sm:inline">Cloud Synced</span>
+            </div>
+          )}
         </div>
 
         {/* Global Branch Filter (Simulation for Super Admin / Static Badge for Officers) */}

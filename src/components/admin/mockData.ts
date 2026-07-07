@@ -129,6 +129,13 @@ export interface AuditLog {
   details: string;
 }
 
+export interface SyncOperation {
+  id: string;
+  timestamp: string;
+  action: string;
+  details: string;
+}
+
 // Initial Mock Seed Data
 const initialBranches: Branch[] = [
   { id: "BR-KT", name: "Katsina HQ", location: "Katsina State", manager: "Alhaji Bello Katsina", status: "Active" },
@@ -326,11 +333,13 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) {
       saveLocalStorageData("cityview_erp_branches", data);
+      ERPStore.addToSyncQueue("Update Branches", "Modified branch networks configurations");
       return;
     }
     const raw = loadLocalStorageData<Branch[]>("cityview_erp_branches", initialBranches);
     const otherBranches = raw.filter(b => b.name !== branch);
     saveLocalStorageData("cityview_erp_branches", [...otherBranches, ...data]);
+    ERPStore.addToSyncQueue("Update Branches", `Modified branch status for ${branch}`);
   };
 
   static getEmployees = () => {
@@ -343,12 +352,14 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) {
       saveLocalStorageData("cityview_erp_employees", data);
+      ERPStore.addToSyncQueue("Update Employees", "Updated corporate staff roster");
       return;
     }
     const raw = loadLocalStorageData<Employee[]>("cityview_erp_employees", initialEmployees);
     const otherBranches = raw.filter(e => e.branch !== branch);
     const tagged = data.map(e => ({ ...e, branch }));
     saveLocalStorageData("cityview_erp_employees", [...otherBranches, ...tagged]);
+    ERPStore.addToSyncQueue("Update Employees", `Updated personnel records for ${branch}`);
   };
 
   static getDrivers = () => {
@@ -361,12 +372,14 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) {
       saveLocalStorageData("cityview_erp_drivers", data);
+      ERPStore.addToSyncQueue("Update Drivers", "Modified drivers listing info");
       return;
     }
     const raw = loadLocalStorageData<Driver[]>("cityview_erp_drivers", initialDrivers);
     const otherBranches = raw.filter(d => d.branch !== branch);
     const tagged = data.map(d => ({ ...d, branch }));
     saveLocalStorageData("cityview_erp_drivers", [...otherBranches, ...tagged]);
+    ERPStore.addToSyncQueue("Update Drivers", `Updated drivers registry for ${branch}`);
   };
 
   static getVehicles = () => {
@@ -379,12 +392,14 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) {
       saveLocalStorageData("cityview_erp_vehicles", data);
+      ERPStore.addToSyncQueue("Update Vehicles", "Updated vehicles catalog details");
       return;
     }
     const raw = loadLocalStorageData<Vehicle[]>("cityview_erp_vehicles", initialVehicles);
     const otherBranches = raw.filter(v => v.branch !== branch);
     const tagged = data.map(v => ({ ...v, branch }));
     saveLocalStorageData("cityview_erp_vehicles", [...otherBranches, ...tagged]);
+    ERPStore.addToSyncQueue("Update Vehicles", `Updated vehicles catalog list for ${branch}`);
   };
 
   static getShifts = () => {
@@ -397,12 +412,14 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) {
       saveLocalStorageData("cityview_erp_shifts", data);
+      ERPStore.addToSyncQueue("Update Shifts", "Logged shift changes");
       return;
     }
     const raw = loadLocalStorageData<Shift[]>("cityview_erp_shifts", initialShifts);
     const otherBranches = raw.filter(s => s.branch !== branch);
     const tagged = data.map(s => ({ ...s, branch }));
     saveLocalStorageData("cityview_erp_shifts", [...otherBranches, ...tagged]);
+    ERPStore.addToSyncQueue("Update Shifts", `Logged shift change logs for ${branch}`);
   };
 
   static getHPContracts = () => {
@@ -410,7 +427,6 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) return raw;
     
-    // Filter contracts to only vehicles belonging to this branch
     const rawVehicles = loadLocalStorageData<Vehicle[]>("cityview_erp_vehicles", initialVehicles);
     const branchVehicles = rawVehicles.filter(v => v.branch === branch);
     const vehicleIds = new Set(branchVehicles.map(v => v.id));
@@ -420,6 +436,7 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) {
       saveLocalStorageData("cityview_erp_hp_contracts", data);
+      ERPStore.addToSyncQueue("Update HP Contracts", "Updated Hire Purchase ledger and payment entries");
       return;
     }
     const raw = loadLocalStorageData<HirePurchaseContract[]>("cityview_erp_hp_contracts", initialHPContracts);
@@ -428,6 +445,7 @@ export class ERPStore {
     const vehicleIds = new Set(branchVehicles.map(v => v.id));
     const otherBranches = raw.filter(c => !vehicleIds.has(c.vehicleId));
     saveLocalStorageData("cityview_erp_hp_contracts", [...otherBranches, ...data]);
+    ERPStore.addToSyncQueue("Update HP Contracts", `Updated HP contract remittance status for ${branch}`);
   };
 
   static getJobCards = () => {
@@ -441,12 +459,14 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) {
       saveLocalStorageData("cityview_erp_job_cards", data);
+      ERPStore.addToSyncQueue("Update Job Cards", "Updated workshop jobs");
       return;
     }
     const raw = loadLocalStorageData<JobCard[]>("cityview_erp_job_cards", initialJobCards);
     const prefix = branch === "Katsina HQ" ? "KT" : "GB";
     const otherBranches = raw.filter(j => !j.vehiclePlate.startsWith(prefix));
     saveLocalStorageData("cityview_erp_job_cards", [...otherBranches, ...data]);
+    ERPStore.addToSyncQueue("Update Job Cards", `Updated technical job cards list for ${branch}`);
   };
 
   static getConversions = () => {
@@ -460,16 +480,21 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) {
       saveLocalStorageData("cityview_erp_conversions", data);
+      ERPStore.addToSyncQueue("Update CNG Conversions", "Modified CNG conversion checklist steps");
       return;
     }
     const raw = loadLocalStorageData<CNGConversion[]>("cityview_erp_conversions", initialConversions);
     const prefix = branch === "Katsina HQ" ? "KT" : "GB";
     const otherBranches = raw.filter(c => !c.vehiclePlate.startsWith(prefix));
     saveLocalStorageData("cityview_erp_conversions", [...otherBranches, ...data]);
+    ERPStore.addToSyncQueue("Update CNG Conversions", `Updated CNG Conversion jobs for ${branch}`);
   };
 
   static getInventory = () => loadLocalStorageData<InventoryItem[]>("cityview_erp_inventory", initialInventory);
-  static saveInventory = (data: InventoryItem[]) => saveLocalStorageData("cityview_erp_inventory", data);
+  static saveInventory = (data: InventoryItem[]) => {
+    saveLocalStorageData("cityview_erp_inventory", data);
+    ERPStore.addToSyncQueue("Update Inventory", "Adjusted inventory count values");
+  };
 
   static getTransactions = () => {
     const raw = loadLocalStorageData<Transaction[]>("cityview_erp_transactions", initialTransactions);
@@ -481,17 +506,18 @@ export class ERPStore {
     const branch = getIsolatedBranch();
     if (!branch) {
       saveLocalStorageData("cityview_erp_transactions", data);
+      ERPStore.addToSyncQueue("Update Ledger", "Logged ledger financial transactions");
       return;
     }
     const raw = loadLocalStorageData<Transaction[]>("cityview_erp_transactions", initialTransactions);
     const otherBranches = raw.filter(t => t.branch !== branch);
     const tagged = data.map(t => ({ ...t, branch }));
     saveLocalStorageData("cityview_erp_transactions", [...otherBranches, ...tagged]);
+    ERPStore.addToSyncQueue("Update Ledger", `Logged revenue/expense entries for ${branch}`);
   };
 
   static getAuditLogs = () => {
     const raw = loadLocalStorageData<AuditLog[]>("cityview_erp_audit_logs", initialAuditLogs);
-    // Audit logs of operations officer are filtered by user branch
     const branch = getIsolatedBranch();
     if (!branch) return raw;
     return raw.filter(l => l.details.includes(branch) || l.action.includes(branch));
@@ -509,5 +535,28 @@ export class ERPStore {
       details
     };
     ERPStore.saveAuditLogs([newLog, ...logs]);
+  };
+
+  // Live Sync Queue Helpers
+  static getSyncQueue = (): SyncOperation[] => {
+    return loadLocalStorageData<SyncOperation[]>("cityview_sync_queue", []);
+  };
+  
+  static saveSyncQueue = (queue: SyncOperation[]) => {
+    saveLocalStorageData("cityview_sync_queue", queue);
+  };
+  
+  static addToSyncQueue = (action: string, details: string) => {
+    if (typeof window !== "undefined" && !navigator.onLine) {
+      const queue = ERPStore.getSyncQueue();
+      const newOp: SyncOperation = {
+        id: `SYNC-${Date.now().toString().slice(-4)}`,
+        timestamp: new Date().toLocaleTimeString(),
+        action,
+        details
+      };
+      ERPStore.saveSyncQueue([...queue, newOp]);
+      window.dispatchEvent(new Event("cityview_sync_updated"));
+    }
   };
 }
