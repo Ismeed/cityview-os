@@ -125,12 +125,141 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
 
   const handleExport = (format: "PDF" | "CSV") => {
     setExporting(true);
+    
     setTimeout(() => {
       setExporting(false);
-      toast.success(`Executive Report Exported`, {
-        description: `Successfully compiled and downloaded CityView_Executive_Summary.${format.toLowerCase()}`
-      });
-    }, 1500);
+      
+      if (format === "CSV") {
+        try {
+          const headers = ["Transaction ID", "Type", "Amount (NGN)", "Category", "Description", "Branch", "Date"];
+          const rows = transactions.map(t => [
+            t.id,
+            t.type,
+            t.amount,
+            t.category,
+            t.description,
+            t.branch,
+            t.date
+          ]);
+          
+          const csvContent = [
+            headers.join(","),
+            ...rows.map(r => r.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))
+          ].join("\n");
+          
+          const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.setAttribute("href", url);
+          link.setAttribute("download", `CityView_Transactions_Ledger_${branchId}.csv`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast.success("CSV Ledger Downloaded", {
+            description: `Ledger dataset contains ${transactions.length} recorded items.`
+          });
+        } catch (error) {
+          toast.error("Export Failed", { description: "An error occurred compiling CSV stream." });
+        }
+      } else {
+        // PDF Print Export
+        try {
+          const printWindow = window.open("", "_blank");
+          if (!printWindow) {
+            toast.error("Export Blocked", { description: "Please allow popups to open the PDF report print preview." });
+            return;
+          }
+          
+          printWindow.document.write(`
+            <html>
+              <head>
+                <title>CityView Executive Boardroom Report</title>
+                <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #1f2937; }
+                  h1 { font-size: 26px; font-weight: 800; color: #0f2b1f; margin-bottom: 5px; }
+                  .subtitle { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #6b7280; font-weight: bold; margin-bottom: 30px; }
+                  .meta { display: flex; justify-content: space-between; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 30px; font-size: 12px; color: #4b5563; }
+                  .kpis { display: flex; gap: 20px; margin-bottom: 40px; }
+                  .kpi-card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 16px; flex: 1; background: #f9fafb; }
+                  .kpi-title { font-size: 9px; font-weight: bold; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em; }
+                  .kpi-val { font-size: 22px; font-weight: 800; margin-top: 10px; color: #0f2b1f; font-family: monospace; }
+                  table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+                  th, td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; font-size: 11px; }
+                  th { background-color: #f3f4f6; color: #374151; font-weight: bold; }
+                  .footer { text-align: center; margin-top: 50px; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+                </style>
+              </head>
+              <body>
+                <h1>CITYVIEW SYNERGY LIMITED</h1>
+                <div class="subtitle">Executive Operations Boardroom Summary</div>
+                
+                <div class="meta">
+                  <div><strong>Active Scope:</strong> ${branchId === "ALL" ? "Global Hub Roster" : branchId === "BR-KT" ? "Katsina HQ" : "Gombe Hub"}</div>
+                  <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
+                </div>
+                
+                <div class="kpis">
+                  <div class="kpi-card">
+                    <div class="kpi-title">Gross Revenue</div>
+                    <div class="kpi-val">${formatNaira(revenueVal)}</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-title">Operating Expenses</div>
+                    <div class="kpi-val">${formatNaira(expenseVal)}</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-title">Net Financial Profit</div>
+                    <div class="kpi-val">${formatNaira(netProfit)}</div>
+                  </div>
+                </div>
+
+                <h2>Key Performance Metrics</h2>
+                <p>Vehicles on road: <strong>${onRoadCount}</strong> | Undergoing conversion/service: <strong>${inWorkshopCount}</strong> | Total CNG Conversions: <strong>${totalConversions}</strong></p>
+
+                <h2>Audit and Operations Log</h2>
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width: 15%">Timestamp</th>
+                      <th style="width: 20%">User</th>
+                      <th style="width: 20%">Action</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${auditLogs.slice(0, 10).map(log => `
+                      <tr>
+                        <td>${log.timestamp}</td>
+                        <td><strong>${log.user}</strong></td>
+                        <td>${log.action}</td>
+                        <td>${log.details}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+
+                <div class="footer">
+                  CityView Digital ERP System (V1.0 Branch Operations) · Confidential Business Analytics
+                </div>
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+          printWindow.focus();
+          printWindow.setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+          }, 250);
+          
+          toast.success("Executive PDF Generated", {
+            description: "Established printer page interface layout."
+          });
+        } catch (error) {
+          toast.error("Export Failed", { description: "An error occurred preparing report printing." });
+        }
+      }
+    }, 1000);
   };
 
   return (

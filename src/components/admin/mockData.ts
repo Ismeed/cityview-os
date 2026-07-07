@@ -16,6 +16,11 @@ export interface Employee {
   salary: number;
   status: "Active" | "On Leave" | "Suspended";
   attendanceToday?: "Present" | "Absent" | "Late" | "Leave";
+  category?: "Regular" | "NYSC" | "Trainee";
+  stateCode?: string;
+  batchGroup?: string;
+  institution?: string;
+  durationMonths?: number;
 }
 
 export interface Driver {
@@ -147,16 +152,18 @@ const initialBranches: Branch[] = [
 ];
 
 const initialEmployees: Employee[] = [
-  { id: "EMP-01", name: "Engr. Yusuf Bello", email: "yusuf.b@cityviewcng.com", role: "Managing Director (CEO)", department: "Executive", branch: "Katsina HQ", salary: 1200000, status: "Active", attendanceToday: "Present" },
-  { id: "EMP-02", name: "Dr. Grace Olamide", email: "grace.o@cityviewcng.com", role: "Executive Director", department: "Executive", branch: "Katsina HQ", salary: 950000, status: "Active", attendanceToday: "Present" },
-  { id: "EMP-03", name: "Mustapha Ibrahim", email: "mustapha.i@cityviewcng.com", role: "Branch Manager", department: "Operations", branch: "Gombe Hub", salary: 500000, status: "Active", attendanceToday: "Present" },
-  { id: "EMP-04", name: "Ado Yahaya", email: "ado.y@cityviewcng.com", role: "Workshop Manager", department: "Technical", branch: "Katsina HQ", salary: 400000, status: "Active", attendanceToday: "Present" },
-  { id: "EMP-05", name: "Chidi Nwachukwu", email: "chidi.n@cityviewcng.com", role: "Senior Technician", department: "Technical", branch: "Katsina HQ", salary: 300000, status: "Active", attendanceToday: "Present" },
-  { id: "EMP-06", name: "Bala Mohammed", email: "bala.m@cityviewcng.com", role: "Technician", department: "Technical", branch: "Gombe Hub", salary: 250000, status: "Active", attendanceToday: "Late" },
-  { id: "EMP-07", name: "Fatima Umar", email: "fatima.u@cityviewcng.com", role: "Accountant", department: "Finance", branch: "Katsina HQ", salary: 350000, status: "Active", attendanceToday: "Present" },
-  { id: "EMP-08", name: "Aminu Dangote", email: "aminu.d@cityviewcng.com", role: "Inventory Officer", department: "Operations", branch: "Katsina HQ", salary: 200000, status: "Active", attendanceToday: "Present" },
-  { id: "EMP-09", name: "Sani Abacha", email: "sani.a@cityviewcng.com", role: "Cashier", department: "Finance", branch: "Gombe Hub", salary: 180000, status: "Active", attendanceToday: "Present" },
-  { id: "EMP-10", name: "Zainab Yusuf", email: "zainab.y@cityviewcng.com", role: "Customer Service", department: "Support", branch: "Katsina HQ", salary: 180000, status: "Active", attendanceToday: "Leave" },
+  { id: "EMP-01", name: "Engr. Yusuf Bello", email: "yusuf.b@cityviewcng.com", role: "Managing Director (CEO)", department: "Executive", branch: "Katsina HQ", salary: 1200000, status: "Active", attendanceToday: "Present", category: "Regular" },
+  { id: "EMP-02", name: "Dr. Grace Olamide", email: "grace.o@cityviewcng.com", role: "Executive Director", department: "Executive", branch: "Katsina HQ", salary: 950000, status: "Active", attendanceToday: "Present", category: "Regular" },
+  { id: "EMP-03", name: "Mustapha Ibrahim", email: "mustapha.i@cityviewcng.com", role: "Branch Manager", department: "Operations", branch: "Gombe Hub", salary: 500000, status: "Active", attendanceToday: "Present", category: "Regular" },
+  { id: "EMP-04", name: "Ado Yahaya", email: "ado.y@cityviewcng.com", role: "Workshop Manager", department: "Technical", branch: "Katsina HQ", salary: 400000, status: "Active", attendanceToday: "Present", category: "Regular" },
+  { id: "EMP-05", name: "Chidi Nwachukwu", email: "chidi.n@cityviewcng.com", role: "Senior Technician", department: "Technical", branch: "Katsina HQ", salary: 300000, status: "Active", attendanceToday: "Present", category: "Regular" },
+  { id: "EMP-06", name: "Bala Mohammed", email: "bala.m@cityviewcng.com", role: "Technician", department: "Technical", branch: "Gombe Hub", salary: 250000, status: "Active", attendanceToday: "Late", category: "Regular" },
+  { id: "EMP-07", name: "Fatima Umar", email: "fatima.u@cityviewcng.com", role: "Accountant", department: "Finance", branch: "Katsina HQ", salary: 350000, status: "Active", attendanceToday: "Present", category: "Regular" },
+  { id: "EMP-08", name: "Aminu Dangote", email: "aminu.d@cityviewcng.com", role: "Inventory Officer", department: "Operations", branch: "Katsina HQ", salary: 200000, status: "Active", attendanceToday: "Present", category: "Regular" },
+  { id: "EMP-09", name: "Sani Abacha", email: "sani.a@cityviewcng.com", role: "Cashier", department: "Finance", branch: "Gombe Hub", salary: 180000, status: "Active", attendanceToday: "Present", category: "Regular" },
+  { id: "EMP-10", name: "Zainab Yusuf", email: "zainab.y@cityviewcng.com", role: "Customer Service", department: "Support", branch: "Katsina HQ", salary: 180000, status: "Active", attendanceToday: "Leave", category: "Regular" },
+  { id: "EMP-11", name: "Ibrahim Salisu", email: "i.salisu@cityviewcng.com", role: "Graduate Assistant (NYSC)", department: "Technical", branch: "Katsina HQ", salary: 75000, status: "Active", attendanceToday: "Present", category: "NYSC", stateCode: "KT/26A/0542", batchGroup: "2026 Batch A" },
+  { id: "EMP-12", name: "Blessing Okon", email: "b.okon@cityviewcng.com", role: "Industrial Trainee (IT)", department: "Support", branch: "Gombe Hub", salary: 40000, status: "Active", attendanceToday: "Present", category: "Trainee", institution: "University of Jos", durationMonths: 6 },
 ];
 
 const initialDrivers: Driver[] = [
