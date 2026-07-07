@@ -1,238 +1,263 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { ERPStore, MockUser } from "../components/admin/mockData";
-import { Shield, Mail, Lock, ArrowRight, Building2, UserCheck } from "lucide-react";
+import { loginUser, getCurrentUser, DEMO_ACCOUNTS, AuthUser } from "../lib/auth";
+import { KeyRound, Mail, ArrowRight, ShieldCheck, Database, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Logo } from "../components/site/logo";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "CityView ERP — Operations Portal Access" },
-      { name: "description", content: "Secure operations entry for CityView CNG Auto Synergy." },
-    ],
+      { title: "CityView ERP — Operations Access Portal" },
+      { name: "description", content: "Login to the CityView Company Operations and Branch Management system." }
+    ]
   }),
-  component: LoginPage,
+  component: Login
 });
 
-function LoginPage() {
+function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // If already logged in, redirect to admin
+  // If already logged in, redirect (with small delay to let localStorage settle on mobile)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const session = localStorage.getItem("cityview_user_session");
-      if (session) {
-        navigate({ to: "/admin" });
+    const timer = setTimeout(() => {
+      const user = getCurrentUser();
+      if (user) {
+        doRedirect(user);
       }
-    }
-  }, [navigate]);
+    }, 120); // small delay for localStorage to settle on iOS/Android
+    return () => clearTimeout(timer);
+  }, []);
 
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const doRedirect = (user: AuthUser) => {
+    navigate({ to: "/admin" });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
     setLoading(true);
 
+    // Small artificial delay to show loading state, then authenticate
     setTimeout(() => {
-      const users = ERPStore.getUsers();
-      const user = users.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase() && u.passwordHash === password
-      );
-
-      if (user) {
-        if (user.disabled) {
-          toast.error("Access Suspended", {
-            description: "This account has been disabled by the system administrator."
-          });
-          setLoading(false);
-          return;
-        }
-        localStorage.setItem("cityview_user_session_v2", JSON.stringify(user));
-        toast.success("Access Granted", {
-          description: `Logged in as ${user.name} (${user.role})`
+      const result = loginUser(email.trim(), password);
+      
+      if (typeof result === "string") {
+        setLoading(false);
+        toast.error("Authentication Failure", {
+          description: result
         });
-        navigate({ to: "/admin" });
       } else {
-        toast.error("Authentication Failed", {
-          description: "Invalid email address or password. Please try again."
+        toast.success("Authentication Successful", {
+          description: `Welcome back, ${result.name} (${result.role})`
         });
+        // Give localStorage 200ms to flush before navigation (crucial for mobile Safari)
+        setTimeout(() => {
+          setLoading(false);
+          doRedirect(result);
+        }, 200);
       }
-      setLoading(false);
     }, 600);
   };
 
-  const selectDemoAccount = (user: MockUser) => {
-    if (user.disabled) {
-      toast.error("Access Suspended", {
-        description: "This account has been disabled."
-      });
-      return;
-    }
-    setEmail(user.email);
-    setPassword(user.passwordHash);
-    toast.info("Demo credentials selected", {
-      description: `Auto-filled form for ${user.role} (${user.branchName})`
-    });
-    
-    // Auto-login after a brief delay to demonstrate the autofill
+  const handleDemoLogin = (key: string) => {
+    if (loading) return;
+    const account = DEMO_ACCOUNTS[key];
+    setEmail(account.email);
+    setPassword(account.password);
+    setLoading(true);
+
     setTimeout(() => {
-      setLoading(true);
-      localStorage.setItem("cityview_user_session_v2", JSON.stringify(user));
-      toast.success("Access Granted", {
-        description: `Logged in as ${user.name} (${user.role})`
-      });
-      navigate({ to: "/admin" });
-      setLoading(false);
+      const result = loginUser(account.email, account.password);
+      if (typeof result !== "string") {
+        toast.success("Demo Session Initiated", {
+          description: `Logged in as ${result.name} — ${result.role}`
+        });
+        // Give localStorage 200ms to flush before navigation (crucial for mobile Safari)
+        setTimeout(() => {
+          setLoading(false);
+          doRedirect(result);
+        }, 200);
+      } else {
+        setLoading(false);
+        toast.error("Demo Login Failed", { description: result });
+      }
     }, 400);
   };
 
   return (
-    <div className="relative min-h-[100svh] flex flex-col justify-center items-center bg-ink text-white/90 overflow-hidden font-sans p-4">
-      {/* Background Gradients & Glows */}
-      <div className="absolute inset-0 bg-hero-gradient opacity-60 z-0" />
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-forest/20 rounded-full blur-[120px] pointer-events-none" />
+    <div className="relative min-h-screen flex items-center justify-center bg-ink text-white overflow-hidden py-12 px-4">
+      {/* Decorative Blur Spheres — using opacity only (no backdrop-filter for mobile compat) */}
+      <div className="absolute top-[-10%] right-[-10%] h-96 w-96 rounded-full bg-forest opacity-20 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-15%] left-[-10%] h-96 w-96 rounded-full bg-emerald opacity-15 blur-3xl pointer-events-none" />
+      
+      {/* Full-screen Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 text-emerald animate-spin" />
+            <p className="text-sm font-bold text-white/60 uppercase tracking-widest">Authenticating...</p>
+          </div>
+        </div>
+      )}
 
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 items-center z-10">
-        
-        {/* Left Side: Brand Context & Clickable Credentials */}
-        <div className="space-y-6 flex flex-col justify-center">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-emerald tracking-wide">
-              <Shield className="h-3.5 w-3.5" />
-              Role-Based Access Control Active
+      <div className="w-full max-w-5xl grid lg:grid-cols-12 gap-6 sm:gap-8 z-10">
+        {/* Left Column: Product Branding (hidden on mobile, shown on desktop) */}
+        <div className="hidden lg:flex lg:col-span-6 flex-col justify-between p-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald to-forest text-forest-deep shadow-glow shrink-0">
+              <Database className="h-5 w-5 text-white" />
             </div>
-            <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
-              CityView Operations <br />
-              <span className="bg-gradient-to-r from-emerald to-green-400 bg-clip-text text-transparent">
-                Control Center
-              </span>
+            <div>
+              <span className="font-display text-lg font-bold tracking-tight text-white block">CITYVIEW</span>
+              <span className="text-[10px] font-bold text-emerald tracking-[0.25em] uppercase">Operations Center</span>
+            </div>
+          </div>
+
+          <div className="mt-16 mb-16 space-y-6">
+            <h1 className="font-display text-4xl sm:text-5xl font-bold leading-tight tracking-tight">
+              One operational loop. <br />
+              <span className="text-gradient-emerald">Zero security leaks.</span>
             </h1>
-            <p className="text-sm text-white/60 max-w-xl">
-              Internal Enterprise Resource Planning (ERP) platform for vehicle tracking, 
-              CNG conversions, workshop repairs, and fleet hire purchase operations.
+            <p className="text-sm text-white/60 max-w-md leading-relaxed">
+              Login to access Katsina HQ and Gombe Hub sub-ledgers. Role-Based Access Control and multi-branch data isolation are strictly enforced.
             </p>
           </div>
 
-          {/* Clickable Demo Credentials Card */}
-          <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 shadow-2xl backdrop-blur-md space-y-4">
-            <div className="flex items-center justify-between border-b border-white/15 pb-3">
-              <div>
-                <h3 className="font-display font-bold text-lg text-white flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-emerald" />
-                  UAT Demo Credentials
-                </h3>
-                <p className="text-xs text-white/40">Click any account below to instantly auto-fill and log in</p>
-              </div>
-              <span className="text-[10px] font-mono bg-emerald/20 text-emerald-light border border-emerald/30 px-2 py-0.5 rounded-full">
-                V1.0 Ready
-              </span>
-            </div>
-
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              {ERPStore.getUsers().filter(u => u.role === "Super Admin").map((user) => {
-                const isSuperAdmin = user.role === "Super Admin";
-                const isFleet = user.department.includes("Fleet");
-                
-                return (
-                  <button
-                    key={user.email}
-                    onClick={() => selectDemoAccount(user)}
-                    className="flex flex-col text-left p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/10 hover:border-emerald/40 transition-all duration-300 group cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span className={`text-xs font-bold ${isSuperAdmin ? 'text-amber-400' : isFleet ? 'text-blue-400' : 'text-emerald-400'}`}>
-                        {user.role}
-                      </span>
-                      <span className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-white/5 text-white/60">
-                        {user.branchName}
-                      </span>
-                    </div>
-                    <span className="text-sm font-semibold text-white mt-1 group-hover:text-emerald transition">
-                      {user.name}
-                    </span>
-                    <span className="text-[10px] text-white/50 font-mono mt-0.5 block break-all">
-                      {user.email}
-                    </span>
-                    <span className="text-[9px] text-white/30 font-mono mt-1">
-                      Password: <span className="text-white/60">{user.passwordHash}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="flex gap-4 text-xs text-white/40 font-semibold uppercase tracking-wider border-t border-white/5 pt-6">
+            <span>Branch Isolation v1.0</span>
+            <span>·</span>
+            <span>Katsina HQ &amp; Gombe Hub</span>
           </div>
         </div>
 
-        {/* Right Side: Login Form Box */}
-        <div className="w-full flex justify-center">
-          <div className="w-full max-w-md bg-white/[0.04] border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-md space-y-6">
-            <div className="flex flex-col items-center text-center space-y-2">
-              <Logo variant="light" showTagline={false} />
-              <h2 className="font-display text-xl font-bold text-white mt-4">Operational Portal Access</h2>
-              <p className="text-xs text-white/50">Enter credentials assigned to your department</p>
+        {/* Right Column: Portal Login Form */}
+        <div className="lg:col-span-6 space-y-4 sm:space-y-6">
+
+          {/* Mobile brand header (visible only on small screens) */}
+          <div className="flex items-center gap-3 lg:hidden">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald to-forest shadow-glow shrink-0">
+              <Database className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <span className="font-display text-base font-bold tracking-tight text-white block">CITYVIEW</span>
+              <span className="text-[9px] font-bold text-emerald tracking-[0.2em] uppercase">Operations Center</span>
+            </div>
+          </div>
+
+          {/* Main Login Card */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 shadow-elevated">
+            <div className="mb-6 sm:mb-8">
+              <h2 className="font-display text-2xl font-bold text-white">Operations Sign In</h2>
+              <p className="text-xs text-white/50 mt-1">Enter your credentials to access your branch dashboard.</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-white/60 block">
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              <div>
+                <label htmlFor="login-email" className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
+                  <Mail className="absolute left-4 top-3.5 h-4 w-4 text-white/30 pointer-events-none" />
                   <input
+                    id="login-email"
                     type="email"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    autoComplete="email"
                     required
-                    placeholder="name@cityview.ng"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 pl-11 pr-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-emerald focus:outline-none transition-all duration-300"
+                    placeholder="employee@cityview.ng"
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 pl-11 pr-4 py-3.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-emerald/60 transition"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-white/60 block">
+              <div>
+                <label htmlFor="login-password" className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1.5">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
+                  <Lock className="absolute left-4 top-3.5 h-4 w-4 text-white/30 pointer-events-none" />
                   <input
-                    type="password"
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
                     required
-                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 pl-11 pr-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-emerald focus:outline-none transition-all duration-300"
+                    placeholder="••••••••"
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 pl-11 pr-12 py-3.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-emerald/60 transition"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-3 p-0.5 text-white/30 hover:text-white transition"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald hover:bg-emerald-light text-forest-deep py-3.5 text-sm font-bold shadow-lg shadow-emerald/10 hover:shadow-emerald/20 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                className="group w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald py-4 text-sm font-bold text-forest-deep transition hover:bg-white active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
-                  <span className="inline-block w-4 h-4 border-2 border-forest-deep border-t-transparent rounded-full animate-spin" />
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Authenticating...
+                  </>
                 ) : (
                   <>
-                    Sign In to Portal
-                    <ArrowRight className="h-4 w-4" />
+                    Secure Sign In
+                    <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                   </>
                 )}
               </button>
             </form>
+          </div>
 
-            <div className="flex items-center justify-center gap-1.5 text-xs text-white/40 border-t border-white/5 pt-4">
-              <Building2 className="h-3.5 w-3.5" />
-              <span>CityView CNG Automobile Synergy Ltd.</span>
+          {/* Demo Credentials Panel */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6">
+            <div className="flex items-center gap-2 text-emerald mb-2">
+              <KeyRound className="h-4 w-4 shrink-0" />
+              <h3 className="text-xs font-bold uppercase tracking-wider">Demo Access Accounts</h3>
+            </div>
+            <p className="text-[11px] text-white/50 mb-4 leading-relaxed">
+              Tap a profile to instantly log in and test branch data isolation.
+            </p>
+
+            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
+              {[
+                { key: "super_admin", title: "Super Admin", email: "admin@cityview.ng", badge: "Full Access" },
+                { key: "katsina_fleet", title: "Katsina Fleet Officer", email: "fleet.katsina@cityview.ng", badge: "Katsina Fleet" },
+                { key: "katsina_workshop", title: "Katsina Workshop Officer", email: "workshop.katsina@cityview.ng", badge: "Katsina Workshop" },
+                { key: "gombe_fleet", title: "Gombe Fleet Officer", email: "fleet.gombe@cityview.ng", badge: "Gombe Fleet" },
+                { key: "gombe_workshop", title: "Gombe Workshop Officer", email: "workshop.gombe@cityview.ng", badge: "Gombe Workshop" },
+              ].map(({ key, title, email: demoEmail, badge }) => (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleDemoLogin(key)}
+                  className="text-left rounded-xl border border-white/8 bg-white/3 p-3 text-xs hover:bg-white/8 hover:border-white/15 active:scale-95 transition group disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <div className="font-bold text-white group-hover:text-emerald transition truncate">{title}</div>
+                  <div className="text-[10px] text-white/40 mt-0.5 truncate">{demoEmail}</div>
+                  <div className="text-[9px] uppercase tracking-wider font-bold text-emerald/75 mt-1">{badge}</div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

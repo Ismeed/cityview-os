@@ -1,8 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, X, ChevronDown, Sun, Moon } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { Logo } from "./logo";
-import { useTheme } from "../../hooks/useTheme";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -28,7 +27,6 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -90,18 +88,11 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <button
-            onClick={toggleTheme}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-forest/15 bg-white/60 text-forest-deep transition hover:bg-white cursor-pointer mr-1"
-            aria-label="Toggle Theme"
-          >
-            {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-amber-500" /> : <Moon className="h-4.5 w-4.5 text-forest" />}
-          </button>
           <Link
-            to="/contact"
+            to="/login"
             className="rounded-full border border-forest/15 bg-white/60 px-4 py-2 text-sm font-medium text-forest-deep transition hover:bg-white"
           >
-            Contact
+            Staff Portal
           </Link>
           <Link
             to="/contact"
@@ -112,23 +103,14 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2 lg:hidden">
-          <button
-            onClick={toggleTheme}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-forest/15 bg-white/70 text-forest-deep cursor-pointer"
-            aria-label="Toggle Theme"
-          >
-            {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-amber-500" /> : <Moon className="h-4.5 w-4.5 text-forest" />}
-          </button>
-          <button
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-forest/15 bg-white/70 text-forest-deep cursor-pointer"
-            onClick={() => setOpen((o) => !o)}
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
+        <button
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-forest/15 bg-white/70 text-forest-deep lg:hidden"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+        >
+          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </div>
 
       {open && (
@@ -158,9 +140,16 @@ export function SiteHeader() {
                   ]
             )}
             <Link
+              to="/login"
+              onClick={() => setOpen(false)}
+              className="mt-2 inline-flex items-center justify-center gap-2 rounded-full border border-forest/15 bg-white px-4 py-3 text-sm font-semibold text-forest-deep"
+            >
+              Staff Portal Login
+            </Link>
+            <Link
               to="/contact"
               onClick={() => setOpen(false)}
-              className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-forest px-4 py-3 text-sm font-semibold text-primary-foreground"
+              className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-forest px-4 py-3 text-sm font-semibold text-primary-foreground"
             >
               Request a Quote
             </Link>

@@ -1,19 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ERPStore, Driver, HirePurchaseContract } from "./mockData";
 import { Search, UserPlus, Phone, ShieldCheck, FileSignature, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
-interface DriverManagementProps {
-  selectedBranch?: string;
-}
-
-export function DriverManagement({ selectedBranch = "ALL" }: DriverManagementProps) {
-  const branchMap: Record<string, string> = {
-    "BR-KT": "Katsina HQ",
-    "BR-GB": "Gombe Hub"
-  };
-  const activeBranchName = branchMap[selectedBranch];
-
+export function DriverManagement() {
   const [drivers, setDrivers] = useState<Driver[]>(ERPStore.getDrivers());
   const [search, setSearch] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -23,15 +13,9 @@ export function DriverManagement({ selectedBranch = "ALL" }: DriverManagementPro
     license: "",
     guarantorName: "",
     guarantorPhone: "",
-    branch: activeBranchName || "Katsina HQ",
+    branch: "Katsina HQ",
     remittanceRate: 12000
   });
-
-  useEffect(() => {
-    if (activeBranchName) {
-      setNewDriver(prev => ({ ...prev, branch: activeBranchName }));
-    }
-  }, [activeBranchName]);
 
   const handleRegisterDriver = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +46,7 @@ export function DriverManagement({ selectedBranch = "ALL" }: DriverManagementPro
       license: "",
       guarantorName: "",
       guarantorPhone: "",
-      branch: activeBranchName || "Katsina HQ",
+      branch: "Katsina HQ",
       remittanceRate: 12000
     });
     setShowAddForm(false);
@@ -80,11 +64,9 @@ export function DriverManagement({ selectedBranch = "ALL" }: DriverManagementPro
   };
 
   const filtered = drivers.filter(d => 
-    (activeBranchName ? d.branch === activeBranchName : true) && (
-      d.name.toLowerCase().includes(search.toLowerCase()) || 
-      d.id.toLowerCase().includes(search.toLowerCase()) || 
-      d.phone.includes(search)
-    )
+    d.name.toLowerCase().includes(search.toLowerCase()) || 
+    d.id.toLowerCase().includes(search.toLowerCase()) || 
+    d.phone.includes(search)
   );
 
   const rawContracts = ERPStore.getHPContracts();
@@ -169,23 +151,14 @@ export function DriverManagement({ selectedBranch = "ALL" }: DriverManagementPro
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Operation Branch Hub</label>
-              {activeBranchName ? (
-                <input
-                  type="text"
-                  readOnly
-                  value={activeBranchName}
-                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs bg-mist/30 text-muted-foreground focus:outline-none"
-                />
-              ) : (
-                <select
-                  value={newDriver.branch}
-                  onChange={(e) => setNewDriver(prev => ({ ...prev, branch: e.target.value }))}
-                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
-                >
-                  <option value="Katsina HQ">Katsina HQ</option>
-                  <option value="Gombe Hub">Gombe Hub</option>
-                </select>
-              )}
+              <select
+                value={newDriver.branch}
+                onChange={(e) => setNewDriver(prev => ({ ...prev, branch: e.target.value }))}
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
+              >
+                <option value="Katsina HQ">Katsina HQ</option>
+                <option value="Gombe Hub">Gombe Hub</option>
+              </select>
             </div>
           </div>
 

@@ -1,19 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ERPStore, Vehicle, Driver } from "./mockData";
 import { Search, Plus, Filter, Info, Fuel, ShieldAlert, User, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
-interface FleetManagementProps {
-  selectedBranch?: string;
-}
-
-export function FleetManagement({ selectedBranch = "ALL" }: FleetManagementProps) {
-  const branchMap: Record<string, string> = {
-    "BR-KT": "Katsina HQ",
-    "BR-GB": "Gombe Hub"
-  };
-  const activeBranchName = branchMap[selectedBranch];
-
+export function FleetManagement() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(ERPStore.getVehicles());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -26,14 +16,8 @@ export function FleetManagement({ selectedBranch = "ALL" }: FleetManagementProps
     type: "Tricycle" as "Tricycle" | "Mini Bus" | "Car" | "Truck",
     fuelType: "CNG" as "Petrol" | "CNG" | "Hybrid",
     conversionStatus: "Converted" as "Converted" | "Petrol Only" | "In-Progress",
-    branch: activeBranchName || "Katsina HQ"
+    branch: "Katsina HQ"
   });
-
-  useEffect(() => {
-    if (activeBranchName) {
-      setNewVeh(prev => ({ ...prev, branch: activeBranchName }));
-    }
-  }, [activeBranchName]);
 
   const handleAddVehicle = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +46,7 @@ export function FleetManagement({ selectedBranch = "ALL" }: FleetManagementProps
       type: "Tricycle",
       fuelType: "CNG",
       conversionStatus: "Converted",
-      branch: activeBranchName || "Katsina HQ"
+      branch: "Katsina HQ"
     });
     setShowAddForm(false);
   };
@@ -82,8 +66,7 @@ export function FleetManagement({ selectedBranch = "ALL" }: FleetManagementProps
     const matchesSearch = v.plateNumber.toLowerCase().includes(search.toLowerCase()) || v.id.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || v.status === statusFilter;
     const matchesConv = conversionFilter === "ALL" || v.conversionStatus === conversionFilter;
-    const matchesBranch = !activeBranchName || v.branch === activeBranchName;
-    return matchesSearch && matchesStatus && matchesConv && matchesBranch;
+    return matchesSearch && matchesStatus && matchesConv;
   });
 
   const rawDrivers = ERPStore.getDrivers();
@@ -161,23 +144,14 @@ export function FleetManagement({ selectedBranch = "ALL" }: FleetManagementProps
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Operating Hub Branch</label>
-              {activeBranchName ? (
-                <input
-                  type="text"
-                  readOnly
-                  value={activeBranchName}
-                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs bg-mist/30 text-muted-foreground focus:outline-none"
-                />
-              ) : (
-                <select
-                  value={newVeh.branch}
-                  onChange={(e) => setNewVeh(prev => ({ ...prev, branch: e.target.value }))}
-                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
-                >
-                  <option value="Katsina HQ">Katsina HQ</option>
-                  <option value="Gombe Hub">Gombe Hub</option>
-                </select>
-              )}
+              <select
+                value={newVeh.branch}
+                onChange={(e) => setNewVeh(prev => ({ ...prev, branch: e.target.value }))}
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
+              >
+                <option value="Katsina HQ">Katsina HQ</option>
+                <option value="Gombe Hub">Gombe Hub</option>
+              </select>
             </div>
           </div>
 

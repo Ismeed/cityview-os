@@ -3,20 +3,21 @@ import { useState, useEffect } from "react";
 import { Sidebar, AdminTab } from "../components/admin/Sidebar";
 import { Header } from "../components/admin/Header";
 import { ExecutiveDashboard } from "../components/admin/ExecutiveDashboard";
+import { FleetDashboard } from "../components/admin/FleetDashboard";
+import { WorkshopDashboard } from "../components/admin/WorkshopDashboard";
 import { BranchManagement } from "../components/admin/BranchManagement";
 import { EmployeeManagement } from "../components/admin/EmployeeManagement";
 import { DriverManagement } from "../components/admin/DriverManagement";
 import { FleetManagement } from "../components/admin/FleetManagement";
-import { RemittanceTracker } from "../components/admin/RemittanceTracker";
+import { ShiftManagement } from "../components/admin/ShiftManagement";
 import { HirePurchase } from "../components/admin/HirePurchase";
 import { WorkshopConversions } from "../components/admin/WorkshopConversions";
 import { Inventory } from "../components/admin/Inventory";
 import { Finance } from "../components/admin/Finance";
 import { CRM } from "../components/admin/CRM";
-import { FrontDesk } from "../components/admin/FrontDesk";
 import { Settings } from "../components/admin/Settings";
-import { ShieldAlert, Database, HelpCircle } from "lucide-react";
-import { ERPStore } from "../components/admin/mockData";
+import { ShieldAlert } from "lucide-react";
+import { getCurrentUser, logoutUser, ROLE_TAB_PERMISSIONS, AuthUser } from "../lib/auth";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -30,77 +31,78 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPanel() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [selectedBranch, setSelectedBranch] = useState("ALL");
-  const [selectedRole, setSelectedRole] = useState("Managing Director (CEO)");
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("System Administrator");
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer toggle state
 
-  // Permission mapper per role
-  const permissions: Record<string, AdminTab[]> = {
-    "Managing Director (CEO)": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
-    "Executive Director": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
-    "Branch Manager": ["branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
-    "Operations Manager": ["fleet", "drivers", "shifts", "hp", "workshop", "crm", "settings"],
-    "Workshop Manager": ["fleet", "workshop", "inventory", "settings"],
-    "Fleet Manager": ["fleet", "drivers", "shifts", "hp", "settings"],
-    "Cashier": ["shifts", "hp", "finance", "crm", "settings"],
-    "Accountant": ["finance", "hp", "inventory", "settings"],
-    "HR Manager": ["branches", "employees", "settings"],
-    "Customer Service": ["drivers", "hp", "workshop", "crm", "settings"],
-    "Inventory Officer": ["inventory", "settings"],
-    "Technician": ["fleet", "workshop", "settings"],
-    "System Administrator": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
-    "Super Admin": ["overview", "branches", "employees", "fleet", "drivers", "shifts", "hp", "workshop", "inventory", "finance", "crm", "settings"],
-    "Branch Operations Officer": ["fleet", "drivers", "shifts", "hp", "settings"],
-    "Workshop & CNG Operations Officer": ["workshop", "inventory", "settings"],
-    "Receptionist": ["frontdesk", "hp", "drivers", "workshop", "crm", "settings"],
-  };
-
+  // Check login credentials on mount.
+  // Uses a retry mechanism (up to 500ms) to handle mobile Safari/Android
+  // where localStorage may not be immediately readable after navigation.
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const sessionStr = localStorage.getItem("cityview_user_session_v2");
-      if (!sessionStr) {
-        navigate({ to: "/login" });
+    let attempts = 0;
+    const maxAttempts = 5;
+    const interval = 100; // ms between retries
+
+    const tryGetSession = () => {
+      const sessionUser = getCurrentUser();
+
+      if (sessionUser) {
+        setUser(sessionUser);
+        // Enforce default landing tabs based on user role
+        if (sessionUser.role === "Super Admin") {
+          setActiveTab("overview");
+          setSelectedBranch("ALL");
+          setSelectedRole("System Administrator");
+        } else if (sessionUser.role === "Branch Operations Officer") {
+          setActiveTab("fleet_dashboard");
+          setSelectedBranch(sessionUser.branch);
+          setSelectedRole("Branch Operations Officer");
+        } else if (sessionUser.role === "Workshop & CNG Operations Officer") {
+          setActiveTab("workshop_dashboard");
+          setSelectedBranch(sessionUser.branch);
+          setSelectedRole("Workshop & CNG Operations Officer");
+        }
       } else {
-        try {
-          const user = JSON.parse(sessionStr);
-          setCurrentUser(user);
-          setSelectedRole(user.role);
-          setSelectedBranch(user.branch);
-          
-          // Set initial tab based on role permissions
-          const allowed = permissions[user.role] || [];
-          if (allowed.length > 0) {
-            if (user.role === "Super Admin" || user.role === "Managing Director (CEO)" || user.role === "System Administrator" || user.role === "Executive Director") {
-              setActiveTab("overview");
-            } else {
-              setActiveTab(allowed[0]);
-            }
-          }
-        } catch (e) {
-          console.error(e);
+        attempts++;
+        if (attempts < maxAttempts) {
+          // Retry after short delay to allow localStorage to flush (mobile fix)
+          setTimeout(tryGetSession, interval);
+        } else {
+          // No session found after retries — redirect to login
           navigate({ to: "/login" });
         }
       }
-      setIsInitialized(true);
-    }
-  }, [navigate]);
+    };
 
-  const allowedTabs = permissions[selectedRole] || [];
+    tryGetSession();
+  }, []);
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-mist/20">
+        <div className="text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const allowedTabs = ROLE_TAB_PERMISSIONS[user.role] || [];
 
   // Reset tab to first allowed tab if role change restricts current active tab
   useEffect(() => {
-    if (isInitialized && !allowedTabs.includes(activeTab)) {
+    if (!allowedTabs.includes(activeTab)) {
       if (allowedTabs.length > 0) {
-        setActiveTab(allowedTabs[0]);
+        setActiveTab(allowedTabs[0] as AdminTab);
       }
     }
-  }, [selectedRole, allowedTabs, activeTab, isInitialized]);
+  }, [user, allowedTabs, activeTab]);
 
   const handleLogout = () => {
-    localStorage.removeItem("cityview_user_session_v2");
+    logoutUser();
     navigate({ to: "/login" });
   };
 
@@ -114,10 +116,10 @@ function AdminPanel() {
           </div>
           <h3 className="font-display text-2xl font-bold text-foreground">Restricted Operations Area</h3>
           <p className="mt-2 text-sm text-muted-foreground max-w-md">
-            Your simulated credentials role <span className="font-bold text-forest-deep">({selectedRole})</span> does not possess access clearance for the <span className="font-bold">"{activeTab.toUpperCase()}"</span> sub-ledger.
+            Your credentials role <span className="font-bold text-forest-deep">({user.role})</span> does not possess access clearance for the <span className="font-bold">"{activeTab.toUpperCase()}"</span> sub-ledger.
           </p>
           <span className="text-xs text-muted-foreground mt-6 bg-mist px-3 py-1.5 rounded-full font-mono">
-            Error: HTTP 403 Forbidden Simulation
+            Error: HTTP 403 Forbidden Access
           </span>
         </div>
       );
@@ -126,69 +128,76 @@ function AdminPanel() {
     switch (activeTab) {
       case "overview":
         return <ExecutiveDashboard branchId={selectedBranch} />;
+      case "fleet_dashboard":
+        return <FleetDashboard branchName={selectedBranch === "BR-KT" ? "Katsina HQ" : "Gombe Hub"} />;
+      case "workshop_dashboard":
+        return <WorkshopDashboard branchName={selectedBranch === "BR-KT" ? "Katsina HQ" : "Gombe Hub"} />;
       case "branches":
         return <BranchManagement />;
       case "employees":
         return <EmployeeManagement />;
       case "drivers":
-        return <DriverManagement selectedBranch={selectedBranch} />;
+        return <DriverManagement />;
       case "fleet":
-        return <FleetManagement selectedBranch={selectedBranch} />;
+        return <FleetManagement />;
       case "shifts":
-        return <RemittanceTracker selectedBranch={selectedBranch} />;
+        return <ShiftManagement />;
       case "hp":
-        return <HirePurchase selectedBranch={selectedBranch} />;
+        return <HirePurchase />;
       case "workshop":
-        return <WorkshopConversions selectedBranch={selectedBranch} />;
+        return <WorkshopConversions />;
       case "inventory":
-        return <Inventory selectedBranch={selectedBranch} />;
+        return <Inventory />;
       case "finance":
-        return <Finance selectedBranch={selectedBranch} />;
+        return <Finance />;
       case "crm":
-        return <CRM selectedBranch={selectedBranch} />;
-      case "frontdesk":
-        return <FrontDesk selectedBranch={selectedBranch} />;
+        return <CRM />;
       case "settings":
-        return <Settings currentUser={currentUser} />;
+        return <Settings />;
       default:
         return <ExecutiveDashboard branchId={selectedBranch} />;
     }
   };
 
-  if (!isInitialized) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-ink">
-        <div className="inline-block w-8 h-8 border-4 border-emerald border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex min-h-screen bg-muted/40 dark:bg-background">
-      {/* Dynamic Collapsible Sidebar */}
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        selectedRole={selectedRole} 
-        mobileOpen={mobileSidebarOpen}
-        setMobileOpen={setMobileSidebarOpen}
-      />
+    <div className="flex min-h-screen bg-mist/20 relative">
+      {/* Drawer Overlay for Mobile Sidebar */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm lg:hidden"
+        />
+      )}
+
+      {/* Collapsible/Responsive Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 transform lg:relative lg:translate-x-0 transition-transform duration-300 ${
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      }`}>
+        <Sidebar 
+          activeTab={activeTab} 
+          setActiveTab={(tab) => {
+            setActiveTab(tab);
+            setSidebarOpen(false); // Auto-close drawer on selection
+          }} 
+          selectedRole={user.role} 
+        />
+      </div>
 
       {/* Main Workspace Column */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden w-full">
         {/* Dynamic Navigation Header */}
         <Header 
           selectedBranch={selectedBranch}
           setSelectedBranch={setSelectedBranch}
           selectedRole={selectedRole}
           setSelectedRole={setSelectedRole}
-          currentUser={currentUser}
           onLogout={handleLogout}
-          onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          user={user}
+          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         />
 
         {/* Tab Viewport */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
           {renderTabContent()}
         </main>
       </div>

@@ -7,24 +7,19 @@ import {
   Sparkles, 
   ChevronDown, 
   LogOut,
-  User,
-  Settings,
-  Sun,
-  Moon,
   Menu
 } from "lucide-react";
 import { ERPStore } from "./mockData";
-import { useTheme } from "../../hooks/useTheme";
-import { toast } from "sonner";
+import { AuthUser } from "../../lib/auth";
 
 interface HeaderProps {
   selectedBranch: string;
   setSelectedBranch: (branch: string) => void;
   selectedRole: string;
   setSelectedRole: (role: string) => void;
-  currentUser?: any;
   onLogout: () => void;
-  onToggleMobileSidebar?: () => void;
+  user: AuthUser;
+  onMenuToggle: () => void;
 }
 
 export function Header({
@@ -32,58 +27,14 @@ export function Header({
   setSelectedBranch,
   selectedRole,
   setSelectedRole,
-  currentUser,
   onLogout,
-  onToggleMobileSidebar
+  user,
+  onMenuToggle
 }: HeaderProps) {
   const [currentTime, setCurrentTime] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [showBranchSelector, setShowBranchSelector] = useState(false);
-  const { theme, toggleTheme } = useTheme();
-
-  // PWA Install Prompt State
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState(true);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setIsInstallable(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-    if (typeof window !== "undefined" && window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstallable(false);
-    }
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallPWA = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult: any) => {
-        if (choiceResult.outcome === "accepted") {
-          setIsInstallable(false);
-        }
-        setDeferredPrompt(null);
-      });
-    } else {
-      toast.info("PWA Installation Guide", {
-        description: "To install CityView ERP, click the share/options menu button in your browser and select 'Add to Home Screen' or 'Install'."
-      });
-    }
-  };
-
-  const isSuperOrAdmin = currentUser?.role === "Super Admin" || 
-                         currentUser?.role === "Managing Director (CEO)" || 
-                         currentUser?.role === "System Administrator" || 
-                         currentUser?.role === "Executive Director";
 
   // Load inventory alerts
   const inventory = ERPStore.getInventory();
@@ -95,18 +46,28 @@ export function Header({
 
   const totalAlerts = lowStockCount + missedRemittanceCount;
 
-  // Update clock every minute
+  // Update clock every second, with safe timezone rendering to avoid mobile RangeError crashes
   useEffect(() => {
     const updateTime = () => {
-      const options: Intl.DateTimeFormatOptions = {
-        timeZone: "Africa/Lagos",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      };
-      const formatter = new Intl.DateTimeFormat("en-US", options);
-      setCurrentTime(formatter.format(new Date()));
+      try {
+        const options: Intl.DateTimeFormatOptions = {
+          timeZone: "Africa/Lagos",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        };
+        const formatter = new Intl.DateTimeFormat("en-US", options);
+        setCurrentTime(formatter.format(new Date()));
+      } catch (e) {
+        // Fallback for older mobile devices/Safari browsers that do not support Lagos timezone directly
+        setCurrentTime(new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        }));
+      }
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -126,10 +87,7 @@ export function Header({
     "Customer Service",
     "Inventory Officer",
     "Technician",
-    "System Administrator",
-    "Branch Operations Officer",
-    "Workshop & CNG Operations Officer",
-    "Receptionist"
+    "System Administrator"
   ];
 
   const branches = [
@@ -138,94 +96,92 @@ export function Header({
     { id: "BR-GB", name: "Gombe Hub" }
   ];
 
+  const isSuperAdmin = user.role === "Super Admin";
+
   return (
-    <header className="sticky top-0 z-40 flex h-20 w-full items-center justify-between border-b border-border bg-card px-8 shadow-soft">
-      {/* Search / Title */}
-      <div className="flex items-center gap-4">
-        {/* Hamburger Menu on mobile */}
-        <button
-          onClick={onToggleMobileSidebar}
-          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:bg-mist/30 dark:hover:bg-white/5 transition text-foreground cursor-pointer md:hidden mr-1"
-          aria-label="Open Navigation Sidebar"
+    <header className="sticky top-0 z-40 flex h-20 w-full items-center justify-between border-b border-border bg-white px-4 sm:px-8 shadow-soft">
+      {/* Search / Title & Mobile Menu Button */}
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onMenuToggle}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-white text-charcoal hover:bg-mist transition lg:hidden cursor-pointer shrink-0"
+          aria-label="Toggle menu"
         >
           <Menu className="h-5 w-5" />
         </button>
 
-        <div>
-          <h1 className="font-display text-xl font-bold text-foreground">CityView Digital HQ</h1>
-          <p className="text-[10px] uppercase font-bold tracking-[0.15em] text-muted-foreground">
-            Enterprise Operations System (ERP)
+        <div className="truncate">
+          <h1 className="font-display text-sm sm:text-base md:text-lg font-bold text-foreground truncate">
+            {isSuperAdmin ? "CityView Digital HQ" : user.branch === "BR-KT" ? "Katsina Branch Office" : "Gombe Branch Office"}
+          </h1>
+          <p className="text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.12em] text-muted-foreground truncate">
+            {isSuperAdmin ? "Enterprise Operations System" : user.department}
           </p>
         </div>
       </div>
 
       {/* Right Tools */}
-      <div className="flex items-center gap-5">
-        {/* Time Widget */}
-        <div className="hidden items-center gap-2 rounded-2xl bg-mist/60 dark:bg-white/5 px-4 py-2 text-xs font-semibold text-foreground md:flex">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        {/* Time Widget (Desktop only) */}
+        <div className="hidden items-center gap-2 rounded-2xl bg-mist/60 px-4 py-2 text-xs font-semibold text-charcoal md:flex">
           <Clock className="h-4 w-4 text-forest" />
-          <span>Katsina/Lagos: <span className="font-mono text-forest-deep dark:text-emerald">{currentTime}</span></span>
+          <span>Katsina/Lagos: <span className="font-mono text-forest-deep">{currentTime}</span></span>
         </div>
 
-        {/* Global Branch Filter */}
-        <div className="relative">
-          {isSuperOrAdmin ? (
-            <>
-              <button 
-                onClick={() => {
-                  setShowBranchSelector(!showBranchSelector);
-                  setShowRoleSelector(false);
-                  setShowNotifications(false);
-                }}
-                className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-mist/40 dark:hover:bg-white/5 transition cursor-pointer"
-              >
-                <MapPin className="h-4 w-4 text-emerald" />
-                <span>
-                  {selectedBranch === "ALL" 
-                    ? "Global Hubs" 
-                    : branches.find(b => b.id === selectedBranch)?.name || selectedBranch}
-                </span>
-                <ChevronDown className="h-3 w-3 text-muted-foreground" />
-              </button>
-              
-              {showBranchSelector && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-card p-2 shadow-elevated animate-fade-down z-50">
-                  <span className="block px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-1">
-                    Select Active Hub
-                  </span>
-                  {branches.map(b => (
-                    <button
-                      key={b.id}
-                      onClick={() => {
-                        setSelectedBranch(b.id);
-                        setShowBranchSelector(false);
-                      }}
-                      className={`w-full text-left rounded-xl px-3 py-2 text-xs font-medium transition ${
-                        selectedBranch === b.id 
-                          ? "bg-forest-deep text-white" 
-                          : "text-muted-foreground hover:bg-mist hover:text-foreground"
-                      }`}
-                    >
-                      {b.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground/80 select-none">
-              <MapPin className="h-4 w-4 text-emerald/60" />
-              <span>
+        {/* Global Branch Filter (Simulation for Super Admin / Static Badge for Officers) */}
+        {isSuperAdmin ? (
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setShowBranchSelector(!showBranchSelector);
+                setShowRoleSelector(false);
+                setShowNotifications(false);
+              }}
+              className="flex items-center gap-2 rounded-2xl border border-border bg-white px-3 py-2 text-xs font-semibold text-charcoal hover:bg-mist/40 transition cursor-pointer"
+            >
+              <MapPin className="h-4 w-4 text-emerald" />
+              <span className="hidden sm:inline">
                 {selectedBranch === "ALL" 
                   ? "Global Hubs" 
                   : branches.find(b => b.id === selectedBranch)?.name || selectedBranch}
               </span>
-            </div>
-          )}
-        </div>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+            
+            {showBranchSelector && (
+              <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-border bg-white p-1.5 shadow-elevated animate-fade-down z-50">
+                <span className="block px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-1">
+                  Select Active Hub
+                </span>
+                {branches.map(b => (
+                  <button
+                    key={b.id}
+                    onClick={() => {
+                      setSelectedBranch(b.id);
+                      setShowBranchSelector(false);
+                      ERPStore.addAuditLog("Super Admin", "Super Admin", "Simulation Branch Filter", `Simulated active branch context to: ${b.name}`);
+                    }}
+                    className={`w-full text-left rounded-xl px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
+                      selectedBranch === b.id 
+                        ? "bg-forest-deep text-white" 
+                        : "text-muted-foreground hover:bg-mist hover:text-foreground"
+                    }`}
+                  >
+                    {b.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 rounded-full bg-mist/60 px-3 py-1.5 text-[10px] sm:text-xs font-semibold text-charcoal">
+            <MapPin className="h-3.5 w-3.5 text-emerald" />
+            <span>{user.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub"}</span>
+          </div>
+        )}
 
-        {/* Dynamic Role Switcher (RBAC Simulator) */}
-        {isSuperOrAdmin ? (
+        {/* Dynamic Role Switcher (Simulation for Super Admin / Static Badge for Officers) */}
+        {isSuperAdmin ? (
           <div className="relative">
             <button 
               onClick={() => {
@@ -233,17 +189,16 @@ export function Header({
                 setShowBranchSelector(false);
                 setShowNotifications(false);
               }}
-              className="flex items-center gap-2 rounded-2xl bg-emerald-soft/60 px-4 py-2 text-xs font-bold text-forest-deep hover:bg-emerald-soft transition border border-emerald/15 cursor-pointer"
-              className="flex items-center gap-2 rounded-2xl bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-700 transition border border-emerald-500/20 cursor-pointer"
+              className="flex items-center gap-2 rounded-2xl bg-emerald-soft/60 px-3 py-2 text-xs font-bold text-forest-deep hover:bg-emerald-soft transition border border-emerald/15 cursor-pointer"
             >
-              <Shield className="h-4 w-4 text-emerald-600" />
-              <span>Role: {selectedRole}</span>
-              <ChevronDown className="h-3 w-3 text-emerald-700" />
+              <Shield className="h-4 w-4 text-forest" />
+              <span className="hidden sm:inline">Role: {selectedRole}</span>
+              <ChevronDown className="h-3 w-3 text-forest" />
             </button>
 
             {showRoleSelector && (
-              <div className="absolute right-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-2xl border border-border bg-card p-2 shadow-lg z-50">
-                <span className="block px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-1">
+              <div className="absolute right-0 mt-2 w-60 max-h-80 overflow-y-auto rounded-2xl border border-border bg-white p-1.5 shadow-elevated animate-fade-down z-50">
+                <span className="block px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-1">
                   Simulate System Permission
                 </span>
                 {roles.map(r => (
@@ -254,7 +209,7 @@ export function Header({
                       setShowRoleSelector(false);
                       ERPStore.addAuditLog("System Admin", "Super Administrator", "RBAC Change Simulation", `Changed active simulation role to: ${r}`);
                     }}
-                    className={`w-full text-left rounded-xl px-3 py-2 text-xs font-medium transition ${
+                    className={`w-full text-left rounded-xl px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
                       selectedRole === r 
                         ? "bg-emerald text-forest-deep font-bold" 
                         : "text-muted-foreground hover:bg-mist hover:text-foreground"
@@ -267,35 +222,11 @@ export function Header({
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-2xl bg-emerald-soft/30 px-4 py-2 text-xs font-semibold text-forest border border-emerald/10 select-none">
-            <Shield className="h-4 w-4 text-forest/60" />
-            <span>Role: {selectedRole}</span>
+          <div className="flex items-center gap-1.5 rounded-full bg-emerald-soft/80 border border-emerald/20 px-3 py-1.5 text-[10px] sm:text-xs font-bold text-forest-deep">
+            <Shield className="h-3.5 w-3.5 text-forest" />
+            <span>{user.role}</span>
           </div>
         )}
-
-        {/* PWA Install Button */}
-        {isInstallable && (
-          <button
-            onClick={handleInstallPWA}
-            className="hidden sm:flex items-center gap-1.5 rounded-2xl border border-border bg-emerald-500/10 hover:bg-emerald-500/20 px-3.5 py-2 text-xs font-bold text-emerald transition cursor-pointer"
-            title="Install Web App (PWA)"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            Install App
-          </button>
-        )}
-
-        {/* Theme Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:bg-mist/30 dark:hover:bg-white/5 transition text-foreground cursor-pointer"
-          aria-label="Toggle Theme"
-        >
-          {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-amber-400 animate-pulse" /> : <Moon className="h-4.5 w-4.5 text-forest" />}
-        </button>
 
         {/* Notifications Button */}
         <div className="relative">
@@ -305,7 +236,7 @@ export function Header({
               setShowBranchSelector(false);
               setShowRoleSelector(false);
             }}
-            className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:bg-mist/30 dark:hover:bg-white/5 transition text-foreground cursor-pointer"
+            className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-white hover:bg-mist/30 transition text-charcoal cursor-pointer"
           >
             <Bell className="h-5 w-5" />
             {totalAlerts > 0 && (
@@ -316,7 +247,7 @@ export function Header({
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 rounded-3xl border border-border bg-card p-4 shadow-elevated animate-fade-down z-50">
+            <div className="absolute right-0 mt-2 w-80 rounded-3xl border border-border bg-white p-4 shadow-elevated animate-fade-down z-50">
               <div className="flex items-center justify-between border-b border-border pb-2 mb-3">
                 <span className="text-xs font-bold text-foreground">Critical Operations Alerts</span>
                 {totalAlerts > 0 && (
@@ -370,19 +301,15 @@ export function Header({
         </div>
 
         {/* User Card */}
-        <div className="flex items-center gap-3 border-l border-border pl-5">
+        <div className="flex items-center gap-3 border-l border-border pl-3 sm:pl-5">
           <div className="hidden text-right md:block">
-            <div className="text-xs font-bold text-foreground">
-              {currentUser?.name || "Admin Desk"}
-            </div>
-            <div className="text-[9px] font-bold text-emerald uppercase tracking-wider">
-              {currentUser?.email || "CityView Synergy"}
-            </div>
+            <div className="text-xs font-bold text-foreground">{user.name}</div>
+            <div className="text-[9px] font-bold text-emerald uppercase tracking-wider">CityView Synergy</div>
           </div>
           <button 
             onClick={onLogout}
             className="flex h-10 w-10 items-center justify-center rounded-2xl bg-ink/5 hover:bg-ink/10 transition text-muted-foreground hover:text-red-500 cursor-pointer"
-            title="Log Out"
+            title="Log out of ERP"
           >
             <LogOut className="h-4.5 w-4.5" />
           </button>

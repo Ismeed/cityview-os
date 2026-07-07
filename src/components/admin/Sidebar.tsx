@@ -14,13 +14,14 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
-  Database,
-  MonitorSmartphone
+  Database
 } from "lucide-react";
 import { useState } from "react";
 
 export type AdminTab = 
   | "overview" 
+  | "fleet_dashboard"
+  | "workshop_dashboard"
   | "branches" 
   | "employees" 
   | "drivers" 
@@ -31,18 +32,15 @@ export type AdminTab =
   | "inventory" 
   | "finance" 
   | "crm" 
-  | "frontdesk"
   | "settings";
 
 interface SidebarProps {
   activeTab: AdminTab;
   setActiveTab: (tab: AdminTab) => void;
   selectedRole: string;
-  mobileOpen?: boolean;
-  setMobileOpen?: (open: boolean) => void;
 }
 
-export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, setMobileOpen }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   // Group items by category
@@ -52,21 +50,35 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
       label: "Executive Board", 
       icon: LayoutDashboard, 
       category: "Executive",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "System Administrator", "Super Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Managing Director (CEO)", "Executive Director"]
+    },
+    { 
+      id: "fleet_dashboard", 
+      label: "Fleet Dashboard", 
+      icon: LayoutDashboard, 
+      category: "Executive",
+      allowedRoles: ["Branch Operations Officer"]
+    },
+    { 
+      id: "workshop_dashboard", 
+      label: "Workshop Dashboard", 
+      icon: LayoutDashboard, 
+      category: "Executive",
+      allowedRoles: ["Workshop & CNG Operations Officer"]
     },
     { 
       id: "branches", 
       label: "Branch Network", 
       icon: MapPin, 
       category: "Executive",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "HR Manager", "System Administrator", "Super Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "HR Manager"]
     },
     { 
       id: "employees", 
       label: "Staff & HR", 
       icon: Users, 
       category: "Executive",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "HR Manager", "System Administrator", "Super Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "HR Manager"]
     },
     
     { 
@@ -74,36 +86,28 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
       label: "Vehicles Catalog", 
       icon: Truck, 
       category: "Operations",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Workshop Manager", "Technician", "System Administrator", "Super Admin", "Branch Operations Officer"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Workshop Manager", "Technician"]
     },
     { 
       id: "drivers", 
       label: "Drivers Directory", 
-      icon: Users, // Reuse or change icon
+      icon: Users, 
       category: "Operations",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Customer Service", "System Administrator", "Super Admin", "Branch Operations Officer", "Receptionist"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Customer Service"]
     },
     { 
       id: "shifts", 
-      label: "Daily Remittances", 
-      icon: Wallet, 
+      label: "Shift Controller", 
+      icon: CalendarDays, 
       category: "Operations",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "System Administrator", "Super Admin", "Branch Operations Officer"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier"]
     },
     { 
       id: "hp", 
       label: "Hire Purchase Ledger", 
       icon: FileSignature, 
       category: "Operations",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service", "System Administrator", "Super Admin", "Branch Operations Officer", "Receptionist"]
-    },
-
-    {
-      id: "frontdesk",
-      label: "Front Desk",
-      icon: MonitorSmartphone,
-      category: "Operations",
-      allowedRoles: ["Receptionist"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service"]
     },
 
     { 
@@ -111,14 +115,14 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
       label: "Workshop & CNG", 
       icon: Wrench, 
       category: "Technical",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Workshop Manager", "Technician", "Customer Service", "System Administrator", "Super Admin", "Workshop & CNG Operations Officer", "Receptionist"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Workshop Manager", "Technician", "Customer Service"]
     },
     { 
       id: "inventory", 
       label: "Inventory & Supply", 
       icon: Boxes, 
       category: "Technical",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Workshop Manager", "Inventory Officer", "Accountant", "System Administrator", "Super Admin", "Workshop & CNG Operations Officer"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Workshop Manager", "Inventory Officer", "Accountant"]
     },
 
     { 
@@ -126,26 +130,27 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
       label: "General Ledger", 
       icon: Wallet, 
       category: "Finance",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Cashier", "Accountant", "System Administrator", "Super Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Cashier", "Accountant"]
     },
     { 
       id: "crm", 
       label: "CRM Portal", 
       icon: UserSquare2, 
       category: "Finance",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Customer Service", "Cashier", "System Administrator", "Super Admin", "Receptionist"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Operations Manager", "Customer Service", "Cashier"]
     },
     { 
       id: "settings", 
-      label: "Profile & Settings", 
+      label: "System Settings", 
       icon: Settings, 
       category: "System",
-      allowedRoles: ["Managing Director (CEO)", "Executive Director", "Branch Manager", "Operations Manager", "Workshop Manager", "Fleet Manager", "Cashier", "Accountant", "HR Manager", "Customer Service", "Inventory Officer", "Technician", "System Administrator", "Super Admin", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Receptionist"]
+      allowedRoles: ["Super Admin", "System Administrator", "Managing Director (CEO)", "Executive Director"]
     }
   ];
 
   // Helper to check if role can access tab
   const isAllowed = (allowedRoles: string[]) => {
+    if (selectedRole === "Super Admin" || selectedRole === "System Administrator" || selectedRole === "Managing Director (CEO)" || selectedRole === "Executive Director") return true;
     return allowedRoles.includes(selectedRole);
   };
 
@@ -158,19 +163,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
   ];
 
   return (
-    <>
-      {/* Mobile Backdrop */}
-      {mobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden"
-          onClick={() => setMobileOpen?.(false)}
-        />
-      )}
-
-      <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-charcoal text-white transition-all duration-300
-        md:relative md:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        ${collapsed ? "md:w-20" : "md:w-72"} w-72`}
-      >
+    <aside className={`relative flex flex-col border-r border-border bg-charcoal text-white transition-all duration-300 ${collapsed ? "w-20" : "w-72"}`}>
       {/* Sidebar header logo */}
       <div className="flex h-20 items-center justify-between border-b border-white/5 px-6">
         <div className="flex items-center gap-3 overflow-hidden">
@@ -211,10 +204,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
                 return (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id as AdminTab);
-                      setMobileOpen?.(false);
-                    }}
+                    onClick={() => setActiveTab(item.id as AdminTab)}
                     className={`group w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-semibold transition ${
                       isActive 
                         ? "bg-forest text-white shadow-glow-soft" 
@@ -239,7 +229,6 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole, mobileOpen, set
           <div className="mt-0.5 font-mono text-[9px]">v1.2.0-Prod · Katsina, NG</div>
         </div>
       )}
-      </aside>
-    </>
+    </aside>
   );
 }
