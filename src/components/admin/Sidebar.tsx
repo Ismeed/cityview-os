@@ -50,35 +50,35 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Executive Board", 
       icon: LayoutDashboard, 
       category: "Executive",
-      allowedRoles: ["Super Admin", "System Administrator", "Managing Director (CEO)", "Executive Director"]
+      allowedRoles: ["Super Admin", "System Administrator", "Managing Director (CEO)", "Executive Director", "Branch Admin"]
     },
     { 
       id: "fleet_dashboard", 
       label: "Fleet Dashboard", 
       icon: LayoutDashboard, 
       category: "Executive",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Fleet Manager", "Branch Admin"]
     },
     { 
       id: "workshop_dashboard", 
       label: "Workshop Dashboard", 
       icon: LayoutDashboard, 
       category: "Executive",
-      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Workshop Manager", "Branch Admin"]
     },
     { 
       id: "branches", 
       label: "Branch Network", 
       icon: MapPin, 
       category: "Executive",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "HR Manager"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "HR Manager", "Branch Admin"]
     },
     { 
       id: "employees", 
       label: "Staff & HR", 
       icon: Users, 
       category: "Executive",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "HR Manager"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "HR Manager", "Branch Admin"]
     },
     
     { 
@@ -86,28 +86,28 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Vehicles Catalog", 
       icon: Truck, 
       category: "Operations",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Workshop Manager", "Technician"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Workshop Manager", "Technician", "Branch Admin"]
     },
     { 
       id: "drivers", 
       label: "Drivers Directory", 
       icon: Users, 
       category: "Operations",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Customer Service"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Customer Service", "Branch Admin"]
     },
     { 
       id: "shifts", 
       label: "Daily Remittance", 
       icon: CalendarDays, 
       category: "Operations",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Branch Admin"]
     },
     { 
       id: "hp", 
       label: "Hire Purchase Ledger", 
       icon: FileSignature, 
       category: "Operations",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service", "Branch Admin"]
     },
  
     { 
@@ -115,14 +115,14 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Workshop & CNG", 
       icon: Wrench, 
       category: "Technical",
-      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Workshop Manager", "Technician", "Customer Service"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Workshop Manager", "Technician", "Customer Service", "Branch Admin"]
     },
     { 
       id: "inventory", 
       label: "Inventory & Supply", 
       icon: Boxes, 
       category: "Technical",
-      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Workshop Manager", "Inventory Officer", "Accountant"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Workshop Manager", "Inventory Officer", "Accountant", "Branch Admin"]
     },
  
     { 
@@ -130,14 +130,14 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "General Ledger", 
       icon: Wallet, 
       category: "Finance",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Cashier", "Accountant"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Cashier", "Accountant", "Branch Admin"]
     },
     { 
       id: "crm", 
       label: "CRM Portal", 
       icon: UserSquare2, 
       category: "Finance",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Operations Manager", "Customer Service", "Cashier"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Operations Manager", "Customer Service", "Cashier", "Branch Admin"]
     },
     { 
       id: "settings", 

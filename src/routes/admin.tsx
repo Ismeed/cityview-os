@@ -68,14 +68,18 @@ function AdminPanel() {
           setActiveTab("overview");
           setSelectedBranch(localStorage.getItem("cityview_selected_branch") || "ALL");
           setSelectedRole("System Administrator");
-        } else if (sessionUser.role === "Branch Operations Officer") {
+        } else if (sessionUser.role === "Branch Operations Officer" || sessionUser.role === "Fleet Manager") {
           setActiveTab("fleet_dashboard");
           setSelectedBranch(sessionUser.branch);
-          setSelectedRole("Branch Operations Officer");
-        } else if (sessionUser.role === "Workshop & CNG Operations Officer") {
+          setSelectedRole(sessionUser.role);
+        } else if (sessionUser.role === "Workshop & CNG Operations Officer" || sessionUser.role === "Workshop Manager") {
           setActiveTab("workshop_dashboard");
           setSelectedBranch(sessionUser.branch);
-          setSelectedRole("Workshop & CNG Operations Officer");
+          setSelectedRole(sessionUser.role);
+        } else if (sessionUser.role === "Branch Admin") {
+          setActiveTab("overview");
+          setSelectedBranch(sessionUser.branch);
+          setSelectedRole(sessionUser.role);
         }
       } else {
         attempts++;

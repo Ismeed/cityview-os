@@ -9,14 +9,78 @@ export interface AuthUser {
 // ──────────────────────────────────────────────────────────────────────────────
 // Seed / Fallback accounts (used only when cityview_erp_users is empty)
 // ──────────────────────────────────────────────────────────────────────────────
-export const SEED_ACCOUNTS: (AuthUser & { password: string })[] = [
+export const SEED_ACCOUNTS: (AuthUser & { password: string; disabled?: boolean })[] = [
   {
     email: "admin@cityview.ng",
     password: "Password123",
     name: "Engr Almustapha Sada Abdullahi",
     role: "Super Admin",
     department: "Executive",
-    branch: "ALL"
+    branch: "ALL",
+    disabled: false
+  },
+  {
+    email: "workshop.global@cityview.ng",
+    password: "Password123",
+    name: "Workshop Global Officer",
+    role: "Workshop & CNG Operations Officer",
+    department: "Workshop & CNG Conversion",
+    branch: "ALL",
+    disabled: true
+  },
+  {
+    email: "fleet.katsina@cityview.ng",
+    password: "Password123",
+    name: "Katsina Fleet Manager",
+    role: "Fleet Manager",
+    department: "Hire Purchase & Fleet Management",
+    branch: "BR-KT",
+    disabled: true
+  },
+  {
+    email: "fleet.gombe@cityview.ng",
+    password: "Password123",
+    name: "Gombe Fleet Manager",
+    role: "Fleet Manager",
+    department: "Hire Purchase & Fleet Management",
+    branch: "BR-GB",
+    disabled: true
+  },
+  {
+    email: "workshop.katsina@cityview.ng",
+    password: "Password123",
+    name: "Katsina Workshop Manager",
+    role: "Workshop Manager",
+    department: "CNG Conversion & Automobile Workshop",
+    branch: "BR-KT",
+    disabled: true
+  },
+  {
+    email: "workshop.gombe@cityview.ng",
+    password: "Password123",
+    name: "Gombe Workshop Manager",
+    role: "Workshop Manager",
+    department: "CNG Conversion & Automobile Workshop",
+    branch: "BR-GB",
+    disabled: true
+  },
+  {
+    email: "admin.katsina@cityview.ng",
+    password: "Password123",
+    name: "Katsina Branch Admin",
+    role: "Branch Admin",
+    department: "Administration & HR",
+    branch: "BR-KT",
+    disabled: true
+  },
+  {
+    email: "admin.gombe@cityview.ng",
+    password: "Password123",
+    name: "Gombe Branch Admin",
+    role: "Branch Admin",
+    department: "Administration & HR",
+    branch: "BR-GB",
+    disabled: true
   }
 ];
 
@@ -45,11 +109,39 @@ export const ROLE_TAB_PERMISSIONS: Record<string, string[]> = {
     "shifts",
     "hp"
   ],
+  "Fleet Manager": [
+    "fleet_dashboard",
+    "fleet",
+    "drivers",
+    "shifts",
+    "hp"
+  ],
   "Workshop & CNG Operations Officer": [
     "workshop_dashboard",
-    "fleet", // view-only fleet for parts/jobs association
+    "fleet",
     "workshop",
     "inventory"
+  ],
+  "Workshop Manager": [
+    "workshop_dashboard",
+    "fleet",
+    "workshop",
+    "inventory"
+  ],
+  "Branch Admin": [
+    "overview",
+    "fleet_dashboard",
+    "workshop_dashboard",
+    "branches",
+    "employees",
+    "fleet",
+    "drivers",
+    "shifts",
+    "hp",
+    "workshop",
+    "inventory",
+    "finance",
+    "crm"
   ]
 };
 
@@ -73,7 +165,7 @@ function loadStoredUsers(): StoredUser[] {
     email: a.email, name: a.name, role: a.role,
     department: a.department, branch: a.branch,
     branchName: a.branch === "ALL" ? "Global Enterprise" : a.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub",
-    passwordHash: a.password, disabled: false
+    passwordHash: a.password, disabled: a.disabled !== undefined ? a.disabled : false
   }));
   const stored = localStorage.getItem("cityview_erp_users");
   if (stored) {
@@ -87,7 +179,7 @@ function loadStoredUsers(): StoredUser[] {
     email: a.email, name: a.name, role: a.role,
     department: a.department, branch: a.branch,
     branchName: a.branch === "ALL" ? "Global Enterprise" : a.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub",
-    passwordHash: a.password, disabled: false
+    passwordHash: a.password, disabled: a.disabled !== undefined ? a.disabled : false
   }));
   localStorage.setItem("cityview_erp_users", JSON.stringify(seeds));
   return seeds;
