@@ -86,7 +86,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Vehicles Catalog", 
       icon: Truck, 
       category: "Operations",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Workshop Manager", "Technician"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Workshop Manager", "Technician", "Branch Admin"]
     },
     { 
       id: "drivers", 
@@ -122,7 +122,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Inventory & Supply", 
       icon: Boxes, 
       category: "Technical",
-      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Workshop Manager", "Inventory Officer", "Accountant"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Workshop Manager", "Inventory Officer", "Accountant", "Branch Admin"]
     },
  
     { 
@@ -137,7 +137,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "CRM Portal", 
       icon: UserSquare2, 
       category: "Finance",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Operations Manager", "Customer Service", "Cashier"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Operations Manager", "Customer Service", "Cashier", "Branch Admin"]
     },
     { 
       id: "settings", 

@@ -137,6 +137,9 @@ export const ROLE_TAB_PERMISSIONS: Record<string, string[]> = {
     "employees",
     "drivers",
     "shifts",
+    "fleet",
+    "inventory",
+    "crm",
     "settings"
   ]
 };
