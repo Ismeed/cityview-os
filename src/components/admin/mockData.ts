@@ -91,6 +91,14 @@ export interface JobCard {
   date: string;
 }
 
+export interface CNGConversionPayment {
+  id: string;
+  date: string;
+  amount: number;
+  paymentMethod: string;
+  notes?: string;
+}
+
 export interface CNGConversion {
   id: string;
   customerName: string;
@@ -103,6 +111,10 @@ export interface CNGConversion {
   assignedEngineers: string[];
   dateStarted: string;
   dateCompleted?: string;
+  paymentType: "Full" | "Installment";
+  amountPaid: number;
+  paymentStatus: "Pending" | "Partially Paid" | "Fully Paid";
+  paymentHistory?: CNGConversionPayment[];
 }
 
 export interface InventoryItem {
@@ -164,7 +176,7 @@ const initialAuditLogs: AuditLog[] = [];
 
 import { getCurrentUser } from "../../lib/auth";
 
-const DATA_SCHEMA_VERSION = "v8"; // bumped: added new seed accounts list for branch roles
+const DATA_SCHEMA_VERSION = "v9"; // bumped: added CNG Conversion installment payments tracking
 const SCHEMA_VERSION_KEY  = "cityview_erp_schema_version";
 
 // On first page load (per browser session), check if the stored schema version

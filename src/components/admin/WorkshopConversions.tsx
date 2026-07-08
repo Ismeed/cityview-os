@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ERPStore, JobCard, CNGConversion, Employee, InventoryItem } from "./mockData";
-import { Search, Plus, Wrench, Fuel, ClipboardList, Check, User, ArrowRight, DollarSign } from "lucide-react";
+import { Search, Plus, Wrench, Fuel, ClipboardList, Check, User, ArrowRight, DollarSign, Activity } from "lucide-react";
 import { toast } from "sonner";
 
 export function WorkshopConversions() {
@@ -41,7 +41,25 @@ export function WorkshopConversions() {
     cngKitType: "Sequential 4-Cylinder Kit",
     cylinderSize: "60L Seamless Steel CNG Cylinder",
     cost: 750000,
-    assignedEngineerId: "EMP-04"
+    assignedEngineerId: "EMP-04",
+    paymentType: "Full" as "Full" | "Installment",
+    initialDeposit: 350000
+  });
+
+  const getActiveBranchDefault = () => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("cityview_selected_branch") || "ALL";
+      if (selected === "BR-GB") return "Gombe Hub";
+    }
+    return "Katsina HQ";
+  };
+
+  // Log Installment Payment Modal State
+  const [paymentModal, setPaymentModal] = useState<CNGConversion | null>(null);
+  const [paymentForm, setPaymentForm] = useState({
+    amount: 100000,
+    paymentMethod: "Bank Transfer",
+    notes: ""
   });
 
   // Technical staff and inventory resources
@@ -99,6 +117,9 @@ export function WorkshopConversions() {
   // Create CNG Conversion
   const handleCreateConversion = (e: React.FormEvent) => {
     e.preventDefault();
+    const costVal = Number(newConv.cost);
+    const depositVal = newConv.paymentType === "Installment" ? Number(newConv.initialDeposit) : 0;
+
     const newEntry: CNGConversion = {
       id: `CNG-${Date.now().toString().slice(-4)}`,
       customerName: newConv.customerName,
@@ -106,15 +127,44 @@ export function WorkshopConversions() {
       vehicleModel: newConv.vehicleModel,
       cngKitType: newConv.cngKitType,
       cylinderSize: newConv.cylinderSize,
-      cost: Number(newConv.cost),
+      cost: costVal,
       status: "Inspection",
       assignedEngineers: [technicians.find(t => t.id === newConv.assignedEngineerId)?.name || "Engr. Yusuf Bello"],
-      dateStarted: new Date().toISOString().split("T")[0]
+      dateStarted: new Date().toISOString().split("T")[0],
+      paymentType: newConv.paymentType,
+      amountPaid: newConv.paymentType === "Installment" ? depositVal : 0,
+      paymentStatus: newConv.paymentType === "Installment"
+        ? (depositVal >= costVal ? "Fully Paid" : depositVal > 0 ? "Partially Paid" : "Pending")
+        : "Pending",
+      paymentHistory: newConv.paymentType === "Installment" && depositVal > 0 ? [
+        {
+          id: `PMT-${Date.now().toString().slice(-4)}`,
+          date: new Date().toISOString().split("T")[0],
+          amount: depositVal,
+          paymentMethod: "Bank Transfer",
+          notes: "Initial installment deposit"
+        }
+      ] : []
     };
 
     const updated = [newEntry, ...conversions];
     setConversions(updated);
     ERPStore.saveConversions(updated);
+
+    // Register deposit revenue
+    if (newConv.paymentType === "Installment" && depositVal > 0) {
+      const transactions = ERPStore.getTransactions();
+      const newTransaction = {
+        id: `TR-${Date.now().toString().slice(-4)}`,
+        type: "Revenue" as const,
+        amount: depositVal,
+        category: "CNG Conversion" as const,
+        description: `Upfront installment deposit for CNG conversion: ${newConv.vehiclePlate.toUpperCase()} (${newConv.customerName})`,
+        branch: getActiveBranchDefault(),
+        date: new Date().toISOString().split("T")[0]
+      };
+      ERPStore.saveTransactions([newTransaction, ...transactions]);
+    }
 
     // Register/update vehicle in fleet as "In-Progress" conversion
     const fleetVehicles = ERPStore.getVehicles();
@@ -124,7 +174,7 @@ export function WorkshopConversions() {
       ERPStore.saveVehicles(updatedVeh);
     }
 
-    ERPStore.addAuditLog("CNG Operations", "Operations Manager", "Start CNG Conversion", `Registered conversion ${newEntry.id} for vehicle ${newConv.vehiclePlate}.`);
+    ERPStore.addAuditLog("CNG Operations", "Operations Manager", "Start CNG Conversion", `Registered conversion ${newEntry.id} with ${newConv.paymentType} payment plan for vehicle ${newConv.vehiclePlate}.`);
 
     toast.success("Conversion Logged", {
       description: `CNG conversion project ${newEntry.id} initialized.`
@@ -137,7 +187,9 @@ export function WorkshopConversions() {
       cngKitType: "Sequential 4-Cylinder Kit",
       cylinderSize: "60L Seamless Steel CNG Cylinder",
       cost: 750000,
-      assignedEngineerId: "EMP-04"
+      assignedEngineerId: "EMP-04",
+      paymentType: "Full",
+      initialDeposit: 350000
     });
     setShowConvForm(false);
   };
@@ -164,18 +216,37 @@ export function WorkshopConversions() {
         if (nextStep === "Handed Over") {
           entry.dateCompleted = new Date().toISOString().split("T")[0];
 
-          // Trigger revenue log in transactions
-          const transactions = ERPStore.getTransactions();
-          const newTransaction = {
-            id: `TR-${Date.now().toString().slice(-4)}`,
-            type: "Revenue" as const,
-            amount: c.cost,
-            category: "CNG Conversion" as const,
-            description: `CNG conversion completion payout: ${c.vehiclePlate} (${c.customerName})`,
-            branch: "Katsina HQ",
-            date: new Date().toISOString().split("T")[0]
-          };
-          ERPStore.saveTransactions([newTransaction, ...transactions]);
+          // Trigger revenue log in transactions for the remaining unpaid balance
+          const remainingBalance = c.paymentType === "Full" ? c.cost : (c.cost - (c.amountPaid || 0));
+          if (remainingBalance > 0) {
+            const transactions = ERPStore.getTransactions();
+            const newTransaction = {
+              id: `TR-${Date.now().toString().slice(-4)}`,
+              type: "Revenue" as const,
+              amount: remainingBalance,
+              category: "CNG Conversion" as const,
+              description: `CNG conversion completion final payout: ${c.vehiclePlate} (${c.customerName})`,
+              branch: getActiveBranchDefault(),
+              date: new Date().toISOString().split("T")[0]
+            };
+            ERPStore.saveTransactions([newTransaction, ...transactions]);
+
+            // Update payment state details
+            entry.amountPaid = c.cost;
+            entry.paymentStatus = "Fully Paid";
+            if (c.paymentType === "Installment") {
+              entry.paymentHistory = [
+                ...(c.paymentHistory || []),
+                {
+                  id: `PMT-${Date.now().toString().slice(-4)}`,
+                  date: new Date().toISOString().split("T")[0],
+                  amount: remainingBalance,
+                  paymentMethod: "Bank Transfer",
+                  notes: "Final payout at handover"
+                }
+              ];
+            }
+          }
 
           // Update fleet details
           const fleetVehicles = ERPStore.getVehicles();
@@ -197,6 +268,64 @@ export function WorkshopConversions() {
     toast.success("Conversion Project Updated", {
       description: `Advanced to: ${nextStep}`
     });
+  };
+
+  const handleLogInstallmentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!paymentModal) return;
+
+    const paymentAmount = Number(paymentForm.amount);
+    if (!paymentAmount || paymentAmount <= 0) {
+      toast.error("Invalid Amount", { description: "Please specify a positive payment value." });
+      return;
+    }
+
+    const updated = conversions.map(c => {
+      if (c.id === paymentModal.id) {
+        const nextPaid = (c.amountPaid || 0) + paymentAmount;
+        const nextHistory = [
+          ...(c.paymentHistory || []),
+          {
+            id: `PMT-${Date.now().toString().slice(-4)}`,
+            date: new Date().toISOString().split("T")[0],
+            amount: paymentAmount,
+            paymentMethod: paymentForm.paymentMethod,
+            notes: paymentForm.notes || "CNG conversion installment"
+          }
+        ];
+        return {
+          ...c,
+          amountPaid: nextPaid,
+          paymentStatus: nextPaid >= c.cost ? "Fully Paid" as const : "Partially Paid" as const,
+          paymentHistory: nextHistory
+        };
+      }
+      return c;
+    });
+
+    setConversions(updated);
+    ERPStore.saveConversions(updated);
+
+    // Save transaction
+    const transactions = ERPStore.getTransactions();
+    const newTransaction = {
+      id: `TR-${Date.now().toString().slice(-4)}`,
+      type: "Revenue" as const,
+      amount: paymentAmount,
+      category: "CNG Conversion" as const,
+      description: `Installment payment for CNG Conversion ${paymentModal.id}: ${paymentModal.vehiclePlate} (${paymentModal.customerName})`,
+      branch: getActiveBranchDefault(),
+      date: new Date().toISOString().split("T")[0]
+    };
+    ERPStore.saveTransactions([newTransaction, ...transactions]);
+
+    ERPStore.addAuditLog("Technical Dept", "Workshop Manager", "CNG Installment Payment", `Logged installment payment ₦${paymentAmount.toLocaleString()} for CNG project ${paymentModal.id}.`);
+
+    toast.success("Payment Logged Successfully", {
+      description: `Logged ₦${paymentAmount.toLocaleString()} payment.`
+    });
+
+    setPaymentModal(null);
   };
 
   // Complete Job Card
@@ -478,6 +607,29 @@ export function WorkshopConversions() {
                 className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-mono"
               />
             </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Payment Plan Plan</label>
+              <select
+                value={newConv.paymentType}
+                onChange={(e) => setNewConv(prev => ({ ...prev, paymentType: e.target.value as "Full" | "Installment" }))}
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
+              >
+                <option value="Full">Full Upfront/Handover</option>
+                <option value="Installment">Installment Plan (Pay Small Small)</option>
+              </select>
+            </div>
+            {newConv.paymentType === "Installment" && (
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Upfront Initial Deposit (₦)</label>
+                <input
+                  type="number"
+                  required
+                  value={newConv.initialDeposit}
+                  onChange={(e) => setNewConv(prev => ({ ...prev, initialDeposit: Number(e.target.value) }))}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-mono"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -605,6 +757,19 @@ export function WorkshopConversions() {
                   <div className="text-right">
                     <div className="text-xs text-muted-foreground font-semibold">Engineers: {c.assignedEngineers.join(", ")}</div>
                     <div className="text-xs font-mono font-bold text-forest-deep mt-0.5">Cost: ₦{c.cost.toLocaleString()}</div>
+                    <div className="mt-1">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                        c.paymentType === "Installment"
+                          ? c.paymentStatus === "Fully Paid"
+                            ? "bg-emerald-500/10 text-emerald"
+                            : "bg-amber-500/10 text-amber-600"
+                          : "bg-slate-100 text-muted-foreground"
+                      }`}>
+                        {c.paymentType === "Installment"
+                          ? `Installment Plan (${c.paymentStatus}): ₦${(c.amountPaid || 0).toLocaleString()} Paid`
+                          : "Full Payment Plan"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -632,8 +797,46 @@ export function WorkshopConversions() {
                   })}
                 </div>
 
+                {/* Installment History Segment */}
+                {c.paymentType === "Installment" && c.paymentHistory && c.paymentHistory.length > 0 && (
+                  <div className="bg-mist/30 border border-border/50 rounded-2xl p-4 space-y-2 mt-4">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Activity className="h-3.5 w-3.5 text-emerald" />
+                      Installment Payment Logs (₦{((c.amountPaid || 0) / c.cost * 100).toFixed(0)}% paid)
+                    </div>
+                    <div className="divide-y divide-border/40 text-xs">
+                      {c.paymentHistory.map(pmt => (
+                        <div key={pmt.id} className="py-2 flex justify-between items-center font-medium">
+                          <div>
+                            <span className="font-semibold text-foreground">₦{pmt.amount.toLocaleString()}</span>
+                            <span className="text-muted-foreground ml-2 text-[10px]">via {pmt.paymentMethod}</span>
+                            {pmt.notes && <span className="text-muted-foreground text-[10px] italic block mt-0.5">{pmt.notes}</span>}
+                          </div>
+                          <span className="font-mono text-muted-foreground text-[10px]">{pmt.date}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Stepper advancement controls */}
                 <div className="flex justify-end items-center gap-3 pt-2">
+                  {c.paymentType === "Installment" && c.paymentStatus !== "Fully Paid" && !isCompleted && (
+                    <button
+                      onClick={() => {
+                        setPaymentModal(c);
+                        setPaymentForm({
+                          amount: Math.min(100000, c.cost - (c.amountPaid || 0)),
+                          paymentMethod: "Bank Transfer",
+                          notes: ""
+                        });
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-700 px-4 py-2 text-xs font-bold transition cursor-pointer"
+                    >
+                      <DollarSign className="h-3.5 w-3.5" />
+                      Log Installment Payment
+                    </button>
+                  )}
                   {isCompleted ? (
                     <span className="text-xs font-semibold text-emerald bg-emerald-soft/50 rounded px-2.5 py-1">
                       Conversion Complete (Handed Over & Invoiced)
@@ -651,6 +854,89 @@ export function WorkshopConversions() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Log Installment Payment Modal */}
+      {paymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card w-full max-w-md rounded-3xl border border-border p-6 shadow-2xl animate-scale-in space-y-4 text-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="font-display font-bold text-lg text-foreground flex items-center gap-1.5">
+                <DollarSign className="h-5 w-5 text-emerald" />
+                Log Installment Payment
+              </h3>
+              <button
+                onClick={() => setPaymentModal(null)}
+                className="text-muted-foreground hover:text-foreground text-sm cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-mist/30 p-3 rounded-2xl border border-border/50 text-xs space-y-1">
+              <div>Customer: <strong className="text-foreground">{paymentModal.customerName}</strong></div>
+              <div>Vehicle: <strong className="text-foreground">{paymentModal.vehiclePlate}</strong></div>
+              <div>Total Package Cost: <strong className="text-foreground">₦{paymentModal.cost.toLocaleString()}</strong></div>
+              <div>Already Paid: <strong className="text-emerald">₦{(paymentModal.amountPaid || 0).toLocaleString()}</strong></div>
+              <div>Outstanding Balance: <strong className="text-red-500">₦{(paymentModal.cost - (paymentModal.amountPaid || 0)).toLocaleString()}</strong></div>
+            </div>
+
+            <form onSubmit={handleLogInstallmentSubmit} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Payment Amount (₦)</label>
+                <input
+                  type="number"
+                  required
+                  max={paymentModal.cost - (paymentModal.amountPaid || 0)}
+                  min={1}
+                  value={paymentForm.amount}
+                  onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-card font-mono text-foreground font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Payment Method</label>
+                <select
+                  value={paymentForm.paymentMethod}
+                  onChange={(e) => setPaymentForm(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-card font-semibold text-foreground"
+                >
+                  <option value="Bank Transfer">Bank Transfer (Direct Deposit)</option>
+                  <option value="Cash">Cash Payment</option>
+                  <option value="POS Terminal">POS Card Terminal</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Cashier Remarks / Transaction Ref</label>
+                <input
+                  type="text"
+                  placeholder="e.g. UBA Transfer Ref: #908472 or Receipt #0452"
+                  value={paymentForm.notes}
+                  onChange={(e) => setPaymentForm(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-card text-foreground"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentModal(null)}
+                  className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold hover:bg-muted transition cursor-pointer text-foreground"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-full bg-forest px-5 py-2 text-xs font-semibold text-white hover:bg-forest-deep transition shadow-glow-soft cursor-pointer"
+                >
+                  Post Payment
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
