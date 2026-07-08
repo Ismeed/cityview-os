@@ -104,6 +104,16 @@ export function HirePurchase() {
     });
     ERPStore.saveVehicles(updatedVehicles);
 
+    // Also update driver's status to "Active"
+    const allDrivers = ERPStore.getDrivers();
+    const updatedDrivers = allDrivers.map(d => {
+      if (d.id === newContractForm.driverId) {
+        return { ...d, status: "Active" as const };
+      }
+      return d;
+    });
+    ERPStore.saveDrivers(updatedDrivers);
+
     // Record system audit log
     const driver = ERPStore.getDrivers().find(d => d.id === newContractForm.driverId);
     const vehicle = allVehicles.find(v => v.id === newContractForm.vehicleId);
@@ -543,7 +553,7 @@ export function HirePurchase() {
         const activeContracts = contracts.filter(c => c.status === "Active" || c.status === "Missed Remittance" || c.status === "Defaulted");
         const assignedDriverIds = new Set(activeContracts.map(c => c.driverId));
         const assignedVehicleIds = new Set(activeContracts.map(c => c.vehicleId));
-        const availableDrivers = ERPStore.getDrivers().filter(d => !assignedDriverIds.has(d.id) && d.status === "Active");
+        const availableDrivers = ERPStore.getDrivers().filter(d => !assignedDriverIds.has(d.id) && (d.status === "Active" || d.status === "Pending Approval"));
         const availableVehicles = ERPStore.getVehicles().filter(v => !assignedVehicleIds.has(v.id) && v.status !== "Decommissioned");
 
         return (
