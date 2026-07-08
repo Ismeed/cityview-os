@@ -14,6 +14,16 @@ export function HirePurchase() {
   });
   const [showCalculator, setShowCalculator] = useState(false);
 
+  // Create Contract modal states
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newContractForm, setNewContractForm] = useState({
+    driverId: "",
+    vehicleId: "",
+    totalAmount: 4750000,
+    dailyTarget: 12000,
+    startDate: new Date().toISOString().split("T")[0]
+  });
+
   // Remittance Board Collapse State
   const [expandedCalendar, setExpandedCalendar] = useState<string | null>(null);
   const [showAllDates, setShowAllDates] = useState<Record<string, boolean>>({});
@@ -21,6 +31,93 @@ export function HirePurchase() {
   // Past Payment Modal State
   const [paymentRecordModal, setPaymentRecordModal] = useState<{ contract: HirePurchaseContract; dateStr: string } | null>(null);
   const [pastPaymentAmount, setPastPaymentAmount] = useState<number>(0);
+
+  // Helper to calculate expected end date excluding Sundays
+  const calculateExpectedEndDate = (startDateStr: string, totalAmount: number, dailyTarget: number) => {
+    const daysRequired = Math.ceil(totalAmount / dailyTarget);
+    const date = new Date(startDateStr);
+    let count = 0;
+    while (count < daysRequired) {
+      date.setDate(date.getDate() + 1);
+      if (date.getDay() !== 0) { // Skip Sundays
+        count++;
+      }
+    }
+    return date.toISOString().split("T")[0];
+  };
+
+  const handleCreateContractSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newContractForm.driverId) {
+      toast.error("Required Field", { description: "Please select a driver." });
+      return;
+    }
+    if (!newContractForm.vehicleId) {
+      toast.error("Required Field", { description: "Please select a leased vehicle." });
+      return;
+    }
+    const daysRequired = Math.ceil(newContractForm.totalAmount / newContractForm.dailyTarget);
+    if (!daysRequired || daysRequired <= 0) {
+      toast.error("Invalid Math", { description: "Total target value must be divisible by daily target." });
+      return;
+    }
+
+    const expectedEnd = calculateExpectedEndDate(newContractForm.startDate, newContractForm.totalAmount, newContractForm.dailyTarget);
+
+    const newContract: HirePurchaseContract = {
+      id: `HP-${Date.now().toString().slice(-4)}`,
+      driverId: newContractForm.driverId,
+      vehicleId: newContractForm.vehicleId,
+      totalAmount: newContractForm.totalAmount,
+      balancePaid: 0,
+      dailyTarget: newContractForm.dailyTarget,
+      startDate: newContractForm.startDate,
+      endDateExpected: expectedEnd,
+      status: "Active",
+      paymentHistory: []
+    };
+
+    const updatedContracts = [newContract, ...contracts];
+    setContracts(updatedContracts);
+    ERPStore.saveHPContracts(updatedContracts);
+
+    // Also update vehicle's assigned driver and status to "On Road"
+    const allVehicles = ERPStore.getVehicles();
+    const updatedVehicles = allVehicles.map(v => {
+      if (v.id === newContractForm.vehicleId) {
+        return {
+          ...v,
+          assignedDriverId: newContractForm.driverId,
+          status: "On Road" as const
+        };
+      }
+      return v;
+    });
+    ERPStore.saveVehicles(updatedVehicles);
+
+    // Record system audit log
+    const driver = ERPStore.getDrivers().find(d => d.id === newContractForm.driverId);
+    const vehicle = allVehicles.find(v => v.id === newContractForm.vehicleId);
+    ERPStore.addAuditLog(
+      "Super Admin",
+      "Executive",
+      "Create Hire Purchase Lease",
+      `Activated new lease contract ${newContract.id} for driver ${driver?.name || newContractForm.driverId} leasing Keke ${vehicle?.plateNumber || newContractForm.vehicleId}.`
+    );
+
+    toast.success("Contract Successfully Activated", {
+      description: `Lease contract ${newContract.id} is now active and tracked.`
+    });
+
+    setShowCreateModal(false);
+    setNewContractForm({
+      driverId: "",
+      vehicleId: "",
+      totalAmount: 4750000,
+      dailyTarget: 12000,
+      startDate: new Date().toISOString().split("T")[0]
+    });
+  };
 
   // Filtered list
   const filtered = contracts.filter(c => {
@@ -181,13 +278,22 @@ export function HirePurchase() {
             Log lease-to-own contracts for CNG tricycles, check driver payments, monitor progress percentages and flag defaults.
           </p>
         </div>
-        <button
-          onClick={() => setShowCalculator(!showCalculator)}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-4 py-2.5 text-xs font-semibold text-charcoal hover:bg-mist transition cursor-pointer"
-        >
-          <Calculator className="h-4 w-4 text-muted-foreground" />
-          HP Repayment Calculator
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowCalculator(!showCalculator)}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-4 py-2.5 text-xs font-semibold text-charcoal hover:bg-mist transition cursor-pointer"
+          >
+            <Calculator className="h-4 w-4 text-muted-foreground" />
+            HP Repayment Calculator
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-forest px-4 py-2.5 text-xs font-bold text-white hover:bg-forest-deep transition cursor-pointer shadow-glow-soft"
+          >
+            <FileSignature className="h-4 w-4" />
+            Create Lease Contract
+          </button>
+        </div>
       </div>
 
       {/* HP Repayment Calculator Module */}
@@ -423,6 +529,129 @@ export function HirePurchase() {
         })}
       </div>
 
+      {/* Create Lease Contract Modal */}
+      {showCreateModal && (() => {
+        const activeContracts = contracts.filter(c => c.status === "Active" || c.status === "Missed Remittance" || c.status === "Defaulted");
+        const assignedDriverIds = new Set(activeContracts.map(c => c.driverId));
+        const assignedVehicleIds = new Set(activeContracts.map(c => c.vehicleId));
+        const availableDrivers = ERPStore.getDrivers().filter(d => !assignedDriverIds.has(d.id) && d.status === "Active");
+        const availableVehicles = ERPStore.getVehicles().filter(v => !assignedVehicleIds.has(v.id) && v.status !== "Decommissioned");
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-3xl border border-border shadow-elevated w-full max-w-md overflow-hidden animate-fade-in">
+              <div className="flex items-center justify-between border-b border-border p-5 bg-mist/20">
+                <h3 className="font-display font-bold text-base text-foreground">Create Lease Contract</h3>
+                <button 
+                  onClick={() => setShowCreateModal(false)} 
+                  className="p-1 rounded-lg hover:bg-mist transition text-muted-foreground cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <form onSubmit={handleCreateContractSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                    Select Driver (Active &amp; Unassigned)
+                  </label>
+                  <select
+                    required
+                    value={newContractForm.driverId}
+                    onChange={(e) => setNewContractForm(prev => ({ ...prev, driverId: e.target.value }))}
+                    className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-medium text-foreground"
+                  >
+                    <option value="">-- Choose Driver --</option>
+                    {availableDrivers.map(d => (
+                      <option key={d.id} value={d.id}>{d.name} ({d.id})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                    Select Vehicle (Available &amp; Unassigned)
+                  </label>
+                  <select
+                    required
+                    value={newContractForm.vehicleId}
+                    onChange={(e) => setNewContractForm(prev => ({ ...prev, vehicleId: e.target.value }))}
+                    className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-medium text-foreground"
+                  >
+                    <option value="">-- Choose Keke/Vehicle --</option>
+                    {availableVehicles.map(v => (
+                      <option key={v.id} value={v.id}>{v.plateNumber} ({v.type} - {v.branch})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid gap-4 grid-cols-2">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                      Total Target (₦)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1}
+                      value={newContractForm.totalAmount}
+                      onChange={(e) => setNewContractForm(prev => ({ ...prev, totalAmount: Number(e.target.value) }))}
+                      className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                      Daily Remittance (₦)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1}
+                      value={newContractForm.dailyTarget}
+                      onChange={(e) => setNewContractForm(prev => ({ ...prev, dailyTarget: Number(e.target.value) }))}
+                      className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-mono font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                    Lease Start Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={newContractForm.startDate}
+                    onChange={(e) => setNewContractForm(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-mono"
+                  />
+                </div>
+
+                <div className="bg-emerald-soft/10 border border-emerald/20 rounded-2xl p-4 text-[11px] text-forest-deep space-y-1">
+                  <div className="font-semibold">ℹ️ Smart Calculation details:</div>
+                  <div>Total Payments Cycles: <span className="font-bold">{Math.ceil(newContractForm.totalAmount / newContractForm.dailyTarget) || 0} Daily Shifts</span></div>
+                  <div>Calculated End Date (excluding Sundays): <span className="font-bold">{calculateExpectedEndDate(newContractForm.startDate, newContractForm.totalAmount, newContractForm.dailyTarget)}</span></div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4 border-t border-border mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-mist transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-full bg-forest px-5 py-2 text-xs font-semibold text-white hover:bg-forest-deep transition cursor-pointer shadow-glow-soft"
+                  >
+                    Activate Lease
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      })()}
       {/* Record Past Payment Dialog */}
       {paymentRecordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 backdrop-blur-sm p-4">

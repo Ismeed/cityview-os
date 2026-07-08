@@ -167,7 +167,7 @@ import { getCurrentUser } from "../../lib/auth";
 // ── Data Schema Version ───────────────────────────────────────────────────────
 // Bump this string whenever seed data or the Employee/Driver/etc. interface
 // grows new required fields that must appear on first load for existing users.
-const DATA_SCHEMA_VERSION = "v6"; // bumped: force-clear all old sessions/accounts cache
+const DATA_SCHEMA_VERSION = "v7"; // bumped: added create lease contract modal + single admin seed
 const SCHEMA_VERSION_KEY  = "cityview_erp_schema_version";
 
 // On first page load (per browser session), check if the stored schema version

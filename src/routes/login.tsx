@@ -226,37 +226,11 @@ function Login() {
             </form>
           </div>
 
-          {/* Demo Credentials Panel */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6">
-            <div className="flex items-center gap-2 text-emerald mb-2">
-              <KeyRound className="h-4 w-4 shrink-0" />
-              <h3 className="text-xs font-bold uppercase tracking-wider">Demo Access Accounts</h3>
-            </div>
-            <p className="text-[11px] text-white/50 mb-4 leading-relaxed">
-              Tap a profile to instantly log in and test branch data isolation.
+          {/* Admin Credentials Quick Hint */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-center">
+            <p className="text-[11px] text-white/40">
+              Administrative Access Workspace. Authorized Personnel Only.
             </p>
-
-            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
-              {[
-                { email: "admin@cityview.ng", title: "Super Admin", badge: "Full Access" },
-                { email: "fleet.katsina@cityview.ng", title: "Katsina Fleet Officer", badge: "Katsina Fleet" },
-                { email: "workshop.katsina@cityview.ng", title: "Katsina Workshop Officer", badge: "Katsina Workshop" },
-                { email: "fleet.gombe@cityview.ng", title: "Gombe Fleet Officer", badge: "Gombe Fleet" },
-                { email: "workshop.gombe@cityview.ng", title: "Gombe Workshop Officer", badge: "Gombe Workshop" },
-              ].map(({ email: demoEmail, title, badge }) => (
-                <button
-                  key={demoEmail}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => handleDemoLogin(demoEmail)}
-                  className="text-left rounded-xl border border-white/8 bg-white/3 p-3 text-xs hover:bg-white/8 hover:border-white/15 active:scale-95 transition group disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  <div className="font-bold text-white group-hover:text-emerald transition truncate">{title}</div>
-                  <div className="text-[10px] text-white/40 mt-0.5 truncate">{demoEmail}</div>
-                  <div className="text-[9px] uppercase tracking-wider font-bold text-emerald/75 mt-1">{badge}</div>
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>

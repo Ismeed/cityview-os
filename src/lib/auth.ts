@@ -17,38 +17,6 @@ export const SEED_ACCOUNTS: (AuthUser & { password: string })[] = [
     role: "Super Admin",
     department: "Executive",
     branch: "ALL"
-  },
-  {
-    email: "fleet.katsina@cityview.ng",
-    password: "Password123",
-    name: "Kabir Katsina",
-    role: "Branch Operations Officer",
-    department: "Hire Purchase & Fleet Management",
-    branch: "BR-KT"
-  },
-  {
-    email: "workshop.katsina@cityview.ng",
-    password: "Password123",
-    name: "Engr. Bashir Katsina",
-    role: "Workshop & CNG Operations Officer",
-    department: "CNG Conversion & Automobile Workshop",
-    branch: "BR-KT"
-  },
-  {
-    email: "fleet.gombe@cityview.ng",
-    password: "Password123",
-    name: "Sani Gombe",
-    role: "Branch Operations Officer",
-    department: "Hire Purchase & Fleet Management",
-    branch: "BR-GB"
-  },
-  {
-    email: "workshop.gombe@cityview.ng",
-    password: "Password123",
-    name: "Engr. Bala Gombe",
-    role: "Workshop & CNG Operations Officer",
-    department: "Workshop & CNG Conversion",
-    branch: "BR-GB"
   }
 ];
 
