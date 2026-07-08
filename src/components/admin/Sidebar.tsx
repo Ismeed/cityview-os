@@ -144,7 +144,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "User Accounts & Security", 
       icon: Settings, 
       category: "System",
-      allowedRoles: ["Super Admin", "System Administrator", "Managing Director (CEO)", "Executive Director"]
+      allowedRoles: ["Super Admin", "System Administrator", "Managing Director (CEO)", "Executive Director", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Fleet Manager", "Workshop Manager", "Branch Admin"]
     }
   ];
 
@@ -210,10 +210,16 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
                         ? "bg-forest text-white shadow-glow-soft" 
                         : "text-white/70 hover:bg-white/5 hover:text-white"
                     }`}
-                    title={collapsed ? item.label : ""}
+                    title={collapsed ? (item.id === "settings" && selectedRole !== "Super Admin" && selectedRole !== "System Administrator" && selectedRole !== "Managing Director (CEO)" && selectedRole !== "Executive Director" ? "Change Password" : item.label) : ""}
                   >
                     <ActiveIcon className={`h-4.5 w-4.5 shrink-0 ${isActive ? "text-emerald" : "text-white/60 group-hover:text-white"}`} />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
+                    {!collapsed && (
+                      <span className="truncate">
+                        {item.id === "settings" && selectedRole !== "Super Admin" && selectedRole !== "System Administrator" && selectedRole !== "Managing Director (CEO)" && selectedRole !== "Executive Director"
+                          ? "Change Password" 
+                          : item.label}
+                      </span>
+                    )}
                   </button>
                 );
               })}

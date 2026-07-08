@@ -319,6 +319,7 @@ export function Settings({ currentUser }: SettingsProps) {
     "Branch Operations Officer",
     "Workshop & CNG Operations Officer",
     "Receptionist",
+    "Branch Admin",
     "Managing Director (CEO)",
     "Executive Director",
     "Branch Manager",
