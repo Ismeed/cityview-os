@@ -107,41 +107,37 @@ export const ROLE_TAB_PERMISSIONS: Record<string, string[]> = {
     "fleet",
     "drivers",
     "shifts",
-    "hp"
+    "hp",
+    "settings"
   ],
   "Fleet Manager": [
     "fleet_dashboard",
     "fleet",
     "drivers",
     "shifts",
-    "hp"
+    "hp",
+    "settings"
   ],
   "Workshop & CNG Operations Officer": [
     "workshop_dashboard",
     "fleet",
     "workshop",
-    "inventory"
+    "inventory",
+    "settings"
   ],
   "Workshop Manager": [
     "workshop_dashboard",
     "fleet",
     "workshop",
-    "inventory"
+    "inventory",
+    "settings"
   ],
   "Branch Admin": [
     "overview",
-    "fleet_dashboard",
-    "workshop_dashboard",
-    "branches",
     "employees",
-    "fleet",
     "drivers",
     "shifts",
-    "hp",
-    "workshop",
-    "inventory",
-    "finance",
-    "crm"
+    "settings"
   ]
 };
 
@@ -167,22 +163,41 @@ function loadStoredUsers(): StoredUser[] {
     branchName: a.branch === "ALL" ? "Global Enterprise" : a.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub",
     passwordHash: a.password, disabled: a.disabled !== undefined ? a.disabled : false
   }));
+
   const stored = localStorage.getItem("cityview_erp_users");
+  let list: StoredUser[] = [];
   if (stored) {
     try {
-      const parsed: StoredUser[] = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        list = parsed;
+      }
     } catch (_) { /* fall through */ }
   }
-  // Seed default users on first load
-  const seeds: StoredUser[] = SEED_ACCOUNTS.map(a => ({
-    email: a.email, name: a.name, role: a.role,
-    department: a.department, branch: a.branch,
-    branchName: a.branch === "ALL" ? "Global Enterprise" : a.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub",
-    passwordHash: a.password, disabled: a.disabled !== undefined ? a.disabled : false
-  }));
-  localStorage.setItem("cityview_erp_users", JSON.stringify(seeds));
-  return seeds;
+
+  // Ensure all SEED_ACCOUNTS are present in the list (match by email)
+  let updated = false;
+  SEED_ACCOUNTS.forEach(seed => {
+    const exists = list.some(u => u.email.toLowerCase() === seed.email.toLowerCase());
+    if (!exists) {
+      list.push({
+        email: seed.email,
+        name: seed.name,
+        role: seed.role,
+        department: seed.department,
+        branch: seed.branch,
+        branchName: seed.branch === "ALL" ? "Global Enterprise" : seed.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub",
+        passwordHash: seed.password,
+        disabled: seed.disabled !== undefined ? seed.disabled : false
+      });
+      updated = true;
+    }
+  });
+
+  if (updated || !stored) {
+    localStorage.setItem("cityview_erp_users", JSON.stringify(list));
+  }
+  return list;
 }
 
 // Load session from LocalStorage
