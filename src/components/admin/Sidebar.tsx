@@ -57,21 +57,21 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Fleet Dashboard", 
       icon: LayoutDashboard, 
       category: "Executive",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Fleet Manager", "Branch Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Fleet Manager"]
     },
     { 
       id: "workshop_dashboard", 
       label: "Workshop Dashboard", 
       icon: LayoutDashboard, 
       category: "Executive",
-      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Workshop Manager", "Branch Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Workshop Manager"]
     },
     { 
       id: "branches", 
       label: "Branch Network", 
       icon: MapPin, 
       category: "Executive",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "HR Manager", "Branch Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "HR Manager"]
     },
     { 
       id: "employees", 
@@ -86,7 +86,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Vehicles Catalog", 
       icon: Truck, 
       category: "Operations",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Workshop Manager", "Technician", "Branch Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Workshop Manager", "Technician"]
     },
     { 
       id: "drivers", 
@@ -107,7 +107,7 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Hire Purchase Ledger", 
       icon: FileSignature, 
       category: "Operations",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service", "Branch Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Operations Officer", "Branch Manager", "Operations Manager", "Fleet Manager", "Cashier", "Accountant", "Customer Service"]
     },
  
     { 
@@ -115,14 +115,14 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "Workshop & CNG", 
       icon: Wrench, 
       category: "Technical",
-      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Workshop Manager", "Technician", "Customer Service", "Branch Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Operations Manager", "Workshop Manager", "Technician", "Customer Service"]
     },
     { 
       id: "inventory", 
       label: "Inventory & Supply", 
       icon: Boxes, 
       category: "Technical",
-      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Workshop Manager", "Inventory Officer", "Accountant", "Branch Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Workshop & CNG Operations Officer", "Branch Manager", "Workshop Manager", "Inventory Officer", "Accountant"]
     },
  
     { 
@@ -130,14 +130,14 @@ export function Sidebar({ activeTab, setActiveTab, selectedRole }: SidebarProps)
       label: "General Ledger", 
       icon: Wallet, 
       category: "Finance",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Cashier", "Accountant", "Branch Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Cashier", "Accountant"]
     },
     { 
       id: "crm", 
       label: "CRM Portal", 
       icon: UserSquare2, 
       category: "Finance",
-      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Operations Manager", "Customer Service", "Cashier", "Branch Admin"]
+      allowedRoles: ["Super Admin", "System Administrator", "Branch Manager", "Operations Manager", "Customer Service", "Cashier"]
     },
     { 
       id: "settings", 
