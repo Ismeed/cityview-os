@@ -32,3 +32,11 @@ dist-ssr
 # Vercel
 .vercel/
 
+# Portable Git
+mingit/
+
+# Temporary / backup files
+*.old.*
+*.utf8.*
+*.old
+*.utf8

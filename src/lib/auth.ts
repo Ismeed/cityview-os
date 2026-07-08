@@ -6,16 +6,19 @@ export interface AuthUser {
   branch: string; // "ALL" for Super Admin, "BR-KT" for Katsina, "BR-GB" for Gombe
 }
 
-export const DEMO_ACCOUNTS: Record<string, AuthUser & { password: string }> = {
-  super_admin: {
+// ──────────────────────────────────────────────────────────────────────────────
+// Seed / Fallback accounts (used only when cityview_erp_users is empty)
+// ──────────────────────────────────────────────────────────────────────────────
+export const SEED_ACCOUNTS: (AuthUser & { password: string })[] = [
+  {
     email: "admin@cityview.ng",
     password: "Password123",
-    name: "Alhaji Yusuf Bello",
+    name: "Engr Almustapha Sada Abdullahi",
     role: "Super Admin",
     department: "Executive",
     branch: "ALL"
   },
-  katsina_fleet: {
+  {
     email: "fleet.katsina@cityview.ng",
     password: "Password123",
     name: "Kabir Katsina",
@@ -23,7 +26,7 @@ export const DEMO_ACCOUNTS: Record<string, AuthUser & { password: string }> = {
     department: "Hire Purchase & Fleet Management",
     branch: "BR-KT"
   },
-  katsina_workshop: {
+  {
     email: "workshop.katsina@cityview.ng",
     password: "Password123",
     name: "Engr. Bashir Katsina",
@@ -31,7 +34,7 @@ export const DEMO_ACCOUNTS: Record<string, AuthUser & { password: string }> = {
     department: "CNG Conversion & Automobile Workshop",
     branch: "BR-KT"
   },
-  gombe_fleet: {
+  {
     email: "fleet.gombe@cityview.ng",
     password: "Password123",
     name: "Sani Gombe",
@@ -39,7 +42,7 @@ export const DEMO_ACCOUNTS: Record<string, AuthUser & { password: string }> = {
     department: "Hire Purchase & Fleet Management",
     branch: "BR-GB"
   },
-  gombe_workshop: {
+  {
     email: "workshop.gombe@cityview.ng",
     password: "Password123",
     name: "Engr. Bala Gombe",
@@ -47,7 +50,7 @@ export const DEMO_ACCOUNTS: Record<string, AuthUser & { password: string }> = {
     department: "Workshop & CNG Conversion",
     branch: "BR-GB"
   }
-};
+];
 
 // Roles mapping to allowed sidebar navigation tabs
 export const ROLE_TAB_PERMISSIONS: Record<string, string[]> = {
@@ -82,25 +85,44 @@ export const ROLE_TAB_PERMISSIONS: Record<string, string[]> = {
   ]
 };
 
-// Load custom user accounts from LocalStorage, fallback to DEMO_ACCOUNTS
-export function getAccounts(): Record<string, AuthUser & { password: string }> {
-  if (typeof window === "undefined") return DEMO_ACCOUNTS;
-  const stored = localStorage.getItem("cityview_auth_accounts");
-  if (!stored) {
-    localStorage.setItem("cityview_auth_accounts", JSON.stringify(DEMO_ACCOUNTS));
-    return DEMO_ACCOUNTS;
-  }
-  try {
-    return JSON.parse(stored) as Record<string, AuthUser & { password: string }>;
-  } catch (e) {
-    return DEMO_ACCOUNTS;
-  }
+// ──────────────────────────────────────────────────────────────────────────────
+// Helpers: read all registered user accounts from ERPStore (cityview_erp_users).
+// Falls back to SEED_ACCOUNTS if nothing is stored yet.
+// ──────────────────────────────────────────────────────────────────────────────
+interface StoredUser {
+  email: string;
+  name: string;
+  role: string;
+  department: string;
+  branch: string;       // "ALL" | "BR-KT" | "BR-GB"
+  branchName: string;
+  passwordHash: string; // plaintext password
+  disabled?: boolean;
 }
 
-export function saveAccounts(accounts: Record<string, AuthUser & { password: string }>) {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("cityview_auth_accounts", JSON.stringify(accounts));
+function loadStoredUsers(): StoredUser[] {
+  if (typeof window === "undefined") return SEED_ACCOUNTS.map(a => ({
+    email: a.email, name: a.name, role: a.role,
+    department: a.department, branch: a.branch,
+    branchName: a.branch === "ALL" ? "Global Enterprise" : a.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub",
+    passwordHash: a.password, disabled: false
+  }));
+  const stored = localStorage.getItem("cityview_erp_users");
+  if (stored) {
+    try {
+      const parsed: StoredUser[] = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (_) { /* fall through */ }
   }
+  // Seed default users on first load
+  const seeds: StoredUser[] = SEED_ACCOUNTS.map(a => ({
+    email: a.email, name: a.name, role: a.role,
+    department: a.department, branch: a.branch,
+    branchName: a.branch === "ALL" ? "Global Enterprise" : a.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub",
+    passwordHash: a.password, disabled: false
+  }));
+  localStorage.setItem("cityview_erp_users", JSON.stringify(seeds));
+  return seeds;
 }
 
 // Load session from LocalStorage
@@ -115,28 +137,31 @@ export function getCurrentUser(): AuthUser | null {
   }
 }
 
-// Log in user and return session or error string
+// Log in user – checks cityview_erp_users (unified credential store)
 export function loginUser(email: string, pass: string): AuthUser | string {
-  const accounts = getAccounts();
-  const matchKey = Object.keys(accounts).find(
-    (key) => accounts[key].email.toLowerCase() === email.toLowerCase()
+  const accounts = loadStoredUsers();
+  const match = accounts.find(
+    (a) => a.email.toLowerCase() === email.toLowerCase()
   );
 
-  if (!matchKey) {
+  if (!match) {
     return "Invalid email credentials. Account not registered.";
   }
 
-  const account = accounts[matchKey];
-  if (account.password !== pass) {
+  if (match.disabled) {
+    return "This account has been disabled. Contact the system administrator.";
+  }
+
+  if (match.passwordHash !== pass) {
     return "Invalid password. Access Denied.";
   }
 
   const session: AuthUser = {
-    email: account.email,
-    name: account.name,
-    role: account.role,
-    department: account.department,
-    branch: account.branch
+    email: match.email,
+    name: match.name,
+    role: match.role,
+    department: match.department,
+    branch: match.branch
   };
 
   if (typeof window !== "undefined") {
@@ -174,3 +199,8 @@ export function checkBranchAuthorization(user: AuthUser | null, targetBranch: st
 
   return userBranchDesc === normalizedTarget;
 }
+
+// Keep legacy export alias for backward compatibility
+export const DEMO_ACCOUNTS = SEED_ACCOUNTS;
+export function getAccounts() { return {}; }
+export function saveAccounts(_: unknown) { /* no-op */ }

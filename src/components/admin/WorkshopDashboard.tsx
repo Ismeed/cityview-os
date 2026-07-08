@@ -11,8 +11,7 @@ import {
   Sliders, 
   Plus, 
   FileText,
-  Activity,
-  WrenchScrewdriver
+  Activity
 } from "lucide-react";
 import { toast } from "sonner";
 

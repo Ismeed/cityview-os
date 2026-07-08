@@ -30,7 +30,7 @@ export function FrontDesk({ selectedBranch = "ALL" }: FrontDeskProps) {
   const today = new Date().toISOString().split("T")[0];
 
   // -- Data State --
-  const [contracts] = useState<HirePurchaseContract[]>(() => ERPStore.getHPContracts().filter(c => !activeBranchName || c.branch === activeBranchName));
+  const [contracts] = useState<HirePurchaseContract[]>(() => ERPStore.getHPContracts());
   const [drivers] = useState<Driver[]>(() => ERPStore.getDrivers().filter(d => !activeBranchName || d.branch === activeBranchName));
   const [visitors, setVisitors] = useState<VisitorLog[]>([]);
 
@@ -132,7 +132,8 @@ export function FrontDesk({ selectedBranch = "ALL" }: FrontDeskProps) {
 
     const driver = drivers.find(d => d.id === allContracts.find(c => c.id === paymentForm.selectedContractId)?.driverId);
     ERPStore.addAuditLog("Reception Desk", "Receptionist", "Record Walk-in Payment", `₦${amount.toLocaleString()} received via ${paymentForm.channel} from ${driver?.name || "driver"} for contract ${paymentForm.selectedContractId}.`);
-    ERPStore.addTransaction({
+    const allTransactions = ERPStore.getTransactions();
+    ERPStore.saveTransactions([...allTransactions, {
       id: `TXN-${Date.now()}`,
       type: "Revenue",
       amount,
@@ -140,7 +141,7 @@ export function FrontDesk({ selectedBranch = "ALL" }: FrontDeskProps) {
       description: `Walk-in HP payment via ${paymentForm.channel} — Contract ${paymentForm.selectedContractId} (${driver?.name || "driver"})`,
       branch: activeBranchName || "Katsina HQ",
       date: today
-    });
+    }]);
 
     toast.success("Payment Recorded!", { description: `₦${amount.toLocaleString()} logged for contract ${paymentForm.selectedContractId}.` });
     setPaymentForm({ driverSearch: "", selectedContractId: "", amount: "", channel: "Cash" });
@@ -162,7 +163,6 @@ export function FrontDesk({ selectedBranch = "ALL" }: FrontDeskProps) {
       laborCharges: 0,
       partsUsed: [],
       status: "Inspecting",
-      branch: activeBranchName || "Katsina HQ",
       date: today
     };
     const cards = ERPStore.getJobCards();

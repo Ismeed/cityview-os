@@ -18,6 +18,7 @@ import { CRM } from "../components/admin/CRM";
 import { Settings } from "../components/admin/Settings";
 import { ShieldAlert } from "lucide-react";
 import { getCurrentUser, logoutUser, ROLE_TAB_PERMISSIONS, AuthUser } from "../lib/auth";
+import { ERPStore } from "../components/admin/mockData";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -129,9 +130,9 @@ function AdminPanel() {
       case "overview":
         return <ExecutiveDashboard branchId={selectedBranch} />;
       case "fleet_dashboard":
-        return <FleetDashboard branchName={selectedBranch === "BR-KT" ? "Katsina HQ" : "Gombe Hub"} />;
+        return <FleetDashboard branchName={user.branch === "ALL" ? "Katsina HQ" : user.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub"} />;
       case "workshop_dashboard":
-        return <WorkshopDashboard branchName={selectedBranch === "BR-KT" ? "Katsina HQ" : "Gombe Hub"} />;
+        return <WorkshopDashboard branchName={user.branch === "ALL" ? "Katsina HQ" : user.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub"} />;
       case "branches":
         return <BranchManagement />;
       case "employees":
@@ -152,8 +153,20 @@ function AdminPanel() {
         return <Finance />;
       case "crm":
         return <CRM />;
-      case "settings":
-        return <Settings />;
+      case "settings": {
+        const dbUsers = ERPStore.getUsers();
+        const activeDbUser = dbUsers.find(u => u.email.toLowerCase() === user?.email.toLowerCase());
+        const mappedUser = user ? {
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          department: user.department,
+          branch: user.branch,
+          branchName: user.branch === "ALL" ? "Global Enterprise" : user.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub",
+          passwordHash: activeDbUser?.passwordHash || "Password123"
+        } : undefined;
+        return <Settings currentUser={mappedUser} />;
+      }
       default:
         return <ExecutiveDashboard branchId={selectedBranch} />;
     }

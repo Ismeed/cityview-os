@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { loginUser, getCurrentUser, DEMO_ACCOUNTS, AuthUser } from "../lib/auth";
+import { loginUser, getCurrentUser, SEED_ACCOUNTS, AuthUser } from "../lib/auth";
 import { KeyRound, Mail, ArrowRight, ShieldCheck, Database, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -63,9 +63,10 @@ function Login() {
     }, 600);
   };
 
-  const handleDemoLogin = (key: string) => {
+  const handleDemoLogin = (demoEmail: string) => {
     if (loading) return;
-    const account = DEMO_ACCOUNTS[key];
+    const account = SEED_ACCOUNTS.find(a => a.email === demoEmail);
+    if (!account) return;
     setEmail(account.email);
     setPassword(account.password);
     setLoading(true);
@@ -237,17 +238,17 @@ function Login() {
 
             <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
               {[
-                { key: "super_admin", title: "Super Admin", email: "admin@cityview.ng", badge: "Full Access" },
-                { key: "katsina_fleet", title: "Katsina Fleet Officer", email: "fleet.katsina@cityview.ng", badge: "Katsina Fleet" },
-                { key: "katsina_workshop", title: "Katsina Workshop Officer", email: "workshop.katsina@cityview.ng", badge: "Katsina Workshop" },
-                { key: "gombe_fleet", title: "Gombe Fleet Officer", email: "fleet.gombe@cityview.ng", badge: "Gombe Fleet" },
-                { key: "gombe_workshop", title: "Gombe Workshop Officer", email: "workshop.gombe@cityview.ng", badge: "Gombe Workshop" },
-              ].map(({ key, title, email: demoEmail, badge }) => (
+                { email: "admin@cityview.ng", title: "Super Admin", badge: "Full Access" },
+                { email: "fleet.katsina@cityview.ng", title: "Katsina Fleet Officer", badge: "Katsina Fleet" },
+                { email: "workshop.katsina@cityview.ng", title: "Katsina Workshop Officer", badge: "Katsina Workshop" },
+                { email: "fleet.gombe@cityview.ng", title: "Gombe Fleet Officer", badge: "Gombe Fleet" },
+                { email: "workshop.gombe@cityview.ng", title: "Gombe Workshop Officer", badge: "Gombe Workshop" },
+              ].map(({ email: demoEmail, title, badge }) => (
                 <button
-                  key={key}
+                  key={demoEmail}
                   type="button"
                   disabled={loading}
-                  onClick={() => handleDemoLogin(key)}
+                  onClick={() => handleDemoLogin(demoEmail)}
                   className="text-left rounded-xl border border-white/8 bg-white/3 p-3 text-xs hover:bg-white/8 hover:border-white/15 active:scale-95 transition group disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <div className="font-bold text-white group-hover:text-emerald transition truncate">{title}</div>
