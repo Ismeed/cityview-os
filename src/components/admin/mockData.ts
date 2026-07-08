@@ -167,7 +167,7 @@ import { getCurrentUser } from "../../lib/auth";
 // ── Data Schema Version ───────────────────────────────────────────────────────
 // Bump this string whenever seed data or the Employee/Driver/etc. interface
 // grows new required fields that must appear on first load for existing users.
-const DATA_SCHEMA_VERSION = "v5"; // bumped: unified auth + fixed admin name
+const DATA_SCHEMA_VERSION = "v6"; // bumped: force-clear all old sessions/accounts cache
 const SCHEMA_VERSION_KEY  = "cityview_erp_schema_version";
 
 // On first page load (per browser session), check if the stored schema version
@@ -190,6 +190,9 @@ if (typeof window !== "undefined") {
       "cityview_erp_audit_logs",
       "cityview_erp_users",
       "cityview_erp_sync_queue",
+      "cityview_auth_session",
+      "cityview_auth_accounts",
+      "cityview_user_session"
     ];
     KEYS_TO_PURGE.forEach(k => localStorage.removeItem(k));
     localStorage.setItem(SCHEMA_VERSION_KEY, DATA_SCHEMA_VERSION);
