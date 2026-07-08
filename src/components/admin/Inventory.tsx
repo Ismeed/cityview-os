@@ -1,12 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, InventoryItem } from "./mockData";
 import { Search, Plus, Boxes, ShieldAlert, FileText, ShoppingCart, RefreshCw, Barcode } from "lucide-react";
 import { toast } from "sonner";
 
 export function Inventory() {
-  const [inventory, setInventory] = useState<InventoryItem[]>(ERPStore.getInventory());
+  const [inventory, setInventory] = useState<InventoryItem[]>(() => ERPStore.getInventory());
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("ALL");
+
+  // Keep list updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setInventory(ERPStore.getInventory());
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
   
   // Forms states
   const [showAddForm, setShowAddForm] = useState(false);

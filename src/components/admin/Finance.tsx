@@ -1,13 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, Transaction } from "./mockData";
 import { Plus, Search, Filter, TrendingUp, TrendingDown, DollarSign, Wallet, CalendarDays, ArrowUpRight } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "sonner";
 
 export function Finance() {
-  const [transactions, setTransactions] = useState<Transaction[]>(ERPStore.getTransactions());
+  const [transactions, setTransactions] = useState<Transaction[]>(() => ERPStore.getTransactions());
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
+
+  // Keep list updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setTransactions(ERPStore.getTransactions());
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
   
   // Transaction entry form state
   const [showAddForm, setShowAddForm] = useState(false);

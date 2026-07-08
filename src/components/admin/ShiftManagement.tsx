@@ -1,192 +1,183 @@
-import { useState } from "react";
-import { ERPStore, Shift, Vehicle, Driver } from "./mockData";
-import { Plus, Check, Play, UserCheck, Gauge, Wallet, Clock, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ERPStore, Shift, Driver } from "./mockData";
+import { Plus, Wallet, Calendar, User, FileText, CheckCircle, AlertTriangle, Search } from "lucide-react";
 import { toast } from "sonner";
 
 export function ShiftManagement() {
-  const [shifts, setShifts] = useState<Shift[]>(ERPStore.getShifts());
-  const [vehicles, setVehicles] = useState<Vehicle[]>(ERPStore.getVehicles());
-  const [drivers, setDrivers] = useState<Driver[]>(ERPStore.getDrivers());
-
-  // Checkout states
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [checkoutData, setCheckoutData] = useState({
+  const [shifts, setShifts] = useState<Shift[]>(() => ERPStore.getShifts());
+  const [drivers, setDrivers] = useState<Driver[]>(() => ERPStore.getDrivers());
+  const [search, setSearch] = useState("");
+  const [showLogForm, setShowLogForm] = useState(false);
+  const [remittanceForm, setRemittanceForm] = useState({
     driverId: "",
-    vehicleId: "",
-    startMileage: 0,
-    startTime: "07:30",
-    shiftType: "Morning" as "Morning" | "Evening"
-  });
-
-  // Checkin states
-  const [activeCheckinShift, setActiveCheckinShift] = useState<Shift | null>(null);
-  const [checkinData, setCheckinData] = useState({
-    endMileage: 0,
-    endTime: "18:00",
-    actualRemittance: 12000,
+    amount: "",
+    date: new Date().toISOString().split("T")[0],
     notes: ""
   });
 
-  // Filter available drivers & vehicles
-  const availableVehicles = vehicles.filter(v => v.status === "Available");
-  // Drivers without an active shift
-  const activeShiftDriverIds = shifts.filter(s => s.status === "In Progress").map(s => s.driverId);
-  const availableDrivers = drivers.filter(d => d.status === "Active" && !activeShiftDriverIds.includes(d.id));
+  // Listen for branch changes
+  useEffect(() => {
+    const refreshData = () => {
+      setShifts(ERPStore.getShifts());
+      setDrivers(ERPStore.getDrivers());
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
 
-  const handleStartShift = (e: React.FormEvent) => {
+  // Filter drivers list to only active drivers with active contracts
+  const activeContracts = ERPStore.getHPContracts().filter(
+    c => c.status === "Active" || c.status === "Missed Remittance" || c.status === "Defaulted"
+  );
+  const eligibleDrivers = drivers.filter(d => 
+    d.status === "Active" && activeContracts.some(c => c.driverId === d.id)
+  );
+
+  // Set default target remittance rate when driver is selected
+  const handleDriverChange = (driverId: string) => {
+    const contract = activeContracts.find(c => c.driverId === driverId);
+    setRemittanceForm(prev => ({
+      ...prev,
+      driverId,
+      amount: contract ? contract.dailyTarget.toString() : ""
+    }));
+  };
+
+  const handleLogRemittance = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkoutData.driverId || !checkoutData.vehicleId) {
-      toast.error("Invalid Selection", { description: "Please select both a driver and a vehicle." });
+    const amountVal = Number(remittanceForm.amount);
+    if (!remittanceForm.driverId) {
+      toast.error("Required Selection", { description: "Please select a driver." });
+      return;
+    }
+    if (!amountVal || amountVal <= 0) {
+      toast.error("Invalid Amount", { description: "Please enter a valid payment amount." });
       return;
     }
 
-    const driver = drivers.find(d => d.id === checkoutData.driverId);
-    const vehicle = vehicles.find(v => v.id === checkoutData.vehicleId);
+    const driver = drivers.find(d => d.id === remittanceForm.driverId);
+    const contract = activeContracts.find(c => c.driverId === remittanceForm.driverId);
+    if (!contract) {
+      toast.error("Contract Error", { description: "No active lease contract found for this driver." });
+      return;
+    }
 
-    const newShift: Shift = {
-      id: `SH-${Date.now().toString().slice(-4)}`,
-      driverId: checkoutData.driverId,
-      vehicleId: checkoutData.vehicleId,
-      branch: vehicle?.branch || "Katsina HQ",
-      shiftType: checkoutData.shiftType,
-      startTime: checkoutData.startTime,
-      startMileage: Number(checkoutData.startMileage),
-      expectedRemittance: driver?.remittanceRate || 12000,
-      status: "In Progress",
-      date: new Date().toISOString().split("T")[0]
+    // Build the remittance log structured as a Shift for db compatibility
+    const expected = contract.dailyTarget;
+    const isUnderpaid = amountVal < expected;
+    const statusVal = isUnderpaid ? ("Defaulted" as const) : ("Completed" as const);
+
+    const newLog: Shift = {
+      id: `REM-${Date.now().toString().slice(-4)}`,
+      driverId: remittanceForm.driverId,
+      vehicleId: contract.vehicleId, // Link automatically from lease contract
+      branch: driver?.branch || "Katsina HQ",
+      shiftType: "Morning",
+      startTime: "00:00",
+      endTime: "00:00",
+      startMileage: 0,
+      endMileage: 0,
+      expectedRemittance: expected,
+      actualRemittance: amountVal,
+      status: statusVal,
+      notes: remittanceForm.notes,
+      date: remittanceForm.date
     };
 
-    // Update shift logs
-    const updatedShifts = [newShift, ...shifts];
+    // Save Remittance Shift Log
+    const updatedShifts = [newLog, ...shifts];
     setShifts(updatedShifts);
     ERPStore.saveShifts(updatedShifts);
 
-    // Update vehicle status
-    const updatedVehicles = vehicles.map(v => v.id === checkoutData.vehicleId ? { ...v, status: "On Road" as const, assignedDriverId: checkoutData.driverId } : v);
-    setVehicles(updatedVehicles);
-    ERPStore.saveVehicles(updatedVehicles);
-
-    ERPStore.addAuditLog(
-      "Dispatcher", 
-      "Fleet Manager", 
-      "Shift Checkout", 
-      `Dispatched vehicle ${vehicle?.plateNumber} to driver ${driver?.name}. Start mileage: ${checkoutData.startMileage}.`
-    );
-
-    toast.success("Shift Started Successfully", {
-      description: `${driver?.name} is on the road with vehicle ${vehicle?.plateNumber}.`
-    });
-
-    setCheckoutData({ driverId: "", vehicleId: "", startMileage: 0, startTime: "07:30", shiftType: "Morning" });
-    setShowCheckout(false);
-  };
-
-  const handleEndShiftSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeCheckinShift) return;
-
-    const isDefaulted = checkinData.actualRemittance < activeCheckinShift.expectedRemittance;
-    const finalStatus = isDefaulted ? ("Defaulted" as const) : ("Completed" as const);
-
-    const updatedShifts = shifts.map(s => {
-      if (s.id === activeCheckinShift.id) {
+    // Update Driver's HP Contract progress & history
+    const allContracts = ERPStore.getHPContracts();
+    const updatedContracts = allContracts.map(c => {
+      if (c.id === contract.id) {
+        const nextBalance = c.balancePaid + amountVal;
+        const complete = nextBalance >= c.totalAmount;
+        const nextStatus = complete ? ("Completed" as const) : isUnderpaid ? ("Missed Remittance" as const) : ("Active" as const);
+        
         return {
-          ...s,
-          endTime: checkinData.endTime,
-          endMileage: Number(checkinData.endMileage),
-          actualRemittance: Number(checkinData.actualRemittance),
-          status: finalStatus,
-          notes: checkinData.notes
+          ...c,
+          balancePaid: Math.min(nextBalance, c.totalAmount),
+          status: nextStatus,
+          paymentHistory: [...c.paymentHistory, { date: remittanceForm.date, amount: amountVal }]
         };
       }
-      return s;
+      return c;
     });
-
-    setShifts(updatedShifts);
-    ERPStore.saveShifts(updatedShifts);
-
-    // Release vehicle
-    const updatedVehicles = vehicles.map(v => {
-      if (v.id === activeCheckinShift.vehicleId) {
-        return { ...v, status: "Available" as const, assignedDriverId: undefined };
-      }
-      return v;
-    });
-    setVehicles(updatedVehicles);
-    ERPStore.saveVehicles(updatedVehicles);
+    ERPStore.saveHPContracts(updatedContracts);
 
     // Record Transaction in Ledger
     const transactions = ERPStore.getTransactions();
     const newTransaction = {
       id: `TR-${Date.now().toString().slice(-4)}`,
       type: "Revenue" as const,
-      amount: Number(checkinData.actualRemittance),
-      category: "Fleet Remittance" as const,
-      description: `Daily remittance for Shift ${activeCheckinShift.id} (${activeCheckinShift.driverId})`,
-      branch: activeCheckinShift.branch,
-      date: new Date().toISOString().split("T")[0]
+      amount: amountVal,
+      category: "Hire Purchase" as const,
+      description: `Daily Lease Remittance - Driver: ${driver?.name || remittanceForm.driverId} (Contract ID: ${contract.id})`,
+      branch: driver?.branch || "Katsina HQ",
+      date: remittanceForm.date
     };
     ERPStore.saveTransactions([newTransaction, ...transactions]);
 
-    // Update Driver's HP Contract if applicable
-    const hpContracts = ERPStore.getHPContracts();
-    const hpUpdated = hpContracts.map(contract => {
-      if (contract.driverId === activeCheckinShift.driverId) {
-        const newBalance = contract.balancePaid + Number(checkinData.actualRemittance);
-        const meetsTarget = Number(checkinData.actualRemittance) >= contract.dailyTarget;
-        return {
-          ...contract,
-          balancePaid: newBalance,
-          status: meetsTarget ? ("Active" as const) : ("Missed Remittance" as const),
-          paymentHistory: [...contract.paymentHistory, { date: new Date().toISOString().split("T")[0], amount: Number(checkinData.actualRemittance) }]
-        };
-      }
-      return contract;
-    });
-    ERPStore.saveHPContracts(hpUpdated);
-
+    // System Audit Log
     ERPStore.addAuditLog(
-      "Dispatcher", 
-      "Fleet Manager", 
-      "Shift Checkin", 
-      `Checked in shift ${activeCheckinShift.id}. Paid: ₦${checkinData.actualRemittance}. Status: ${finalStatus}.`
+      "Cashier Desk",
+      "Cashier",
+      "Record Remittance",
+      `Received daily lease payment of ₦${amountVal.toLocaleString()} from driver ${driver?.name || remittanceForm.driverId}.`
     );
 
-    toast.success("Shift Closed Successfully", {
-      description: `Remittance logged. Vehicle has been set back to Available status.`
+    toast.success("Remittance Recorded Successfully", {
+      description: `Logged ₦${amountVal.toLocaleString()} payment for ${remittanceForm.date}.`
     });
 
-    setActiveCheckinShift(null);
-    setCheckinData({ endMileage: 0, endTime: "18:00", actualRemittance: 12000, notes: "" });
+    // Reset Form
+    setRemittanceForm({
+      driverId: "",
+      amount: "",
+      date: new Date().toISOString().split("T")[0],
+      notes: ""
+    });
+    setShowLogForm(false);
   };
 
+  // Filtered lists
+  const filteredRemittances = shifts.filter(s => {
+    const driverObj = drivers.find(d => d.id === s.driverId);
+    const searchLower = search.toLowerCase();
+    return (
+      s.id.toLowerCase().includes(searchLower) ||
+      s.driverId.toLowerCase().includes(searchLower) ||
+      (driverObj && driverObj.name.toLowerCase().includes(searchLower))
+    );
+  });
+
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in text-foreground">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h2 className="font-display text-3xl font-bold text-foreground">Shift operations dashboard</h2>
+          <h2 className="font-display text-3xl font-bold text-foreground">Daily Remittance Tracker</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Dispatch vehicles to drivers, review checkouts, log daily evening remittance returns, and record mileage logs.
+            Log daily lease remittance payments from drivers, track payment logs, and monitor collection statuses.
           </p>
         </div>
         <button
-          onClick={() => {
-            setShowCheckout(!showCheckout);
-            setActiveCheckinShift(null);
-          }}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-forest px-4 py-2.5 text-xs font-semibold text-white hover:bg-forest-deep transition shadow-glow-soft cursor-pointer"
+          onClick={() => setShowLogForm(!showLogForm)}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-forest px-4 py-2.5 text-xs font-bold text-white hover:bg-forest-deep transition shadow-glow-soft cursor-pointer"
         >
-          <Play className="h-4 w-4" />
-          Morning checkout
+          <Plus className="h-4 w-4" />
+          Log Remittance Payment
         </button>
       </div>
 
-      {/* 1. MORNING CHECKOUT FORM */}
-      {showCheckout && (
-        <form onSubmit={handleStartShift} className="rounded-3xl border border-border bg-mist/20 p-6 space-y-4 animate-fade-down max-w-3xl">
+      {/* Log Remittance Form */}
+      {showLogForm && (
+        <form onSubmit={handleLogRemittance} className="rounded-3xl border border-border bg-mist/20 p-6 space-y-4 animate-fade-down max-w-3xl">
           <h4 className="font-display font-bold text-base text-foreground flex items-center gap-2">
-            <UserCheck className="h-5 w-5 text-forest" />
-            Dispatch Vehicle (Start Shift Checkout)
+            <Wallet className="h-5 w-5 text-forest" />
+            Record Daily Remittance Payment
           </h4>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -194,148 +185,55 @@ export function ShiftManagement() {
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Select Driver</label>
               <select
                 required
-                value={checkoutData.driverId}
-                onChange={(e) => {
-                  const driver = drivers.find(d => d.id === e.target.value);
-                  setCheckoutData(prev => ({ ...prev, driverId: e.target.value }));
-                }}
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
+                value={remittanceForm.driverId}
+                onChange={(e) => handleDriverChange(e.target.value)}
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white text-foreground font-medium"
               >
                 <option value="">-- Choose Driver --</option>
-                {availableDrivers.map(d => (
+                {eligibleDrivers.map(d => (
                   <option key={d.id} value={d.id}>{d.name} ({d.id})</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Select Available Tricycle / Vehicle</label>
-              <select
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Date of Payment</label>
+              <input
+                type="date"
                 required
-                value={checkoutData.vehicleId}
-                onChange={(e) => setCheckoutData(prev => ({ ...prev, vehicleId: e.target.value }))}
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
-              >
-                <option value="">-- Choose Vehicle --</option>
-                {availableVehicles.map(v => (
-                  <option key={v.id} value={v.id}>{v.plateNumber} [{v.type}] ({v.branch})</option>
-                ))}
-              </select>
+                value={remittanceForm.date}
+                onChange={(e) => setRemittanceForm(prev => ({ ...prev, date: e.target.value }))}
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-mono"
+              />
             </div>
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Checkout Mileage (km)</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Amount Received (₦)</label>
               <input
                 type="number"
                 required
-                value={checkoutData.startMileage}
-                onChange={(e) => setCheckoutData(prev => ({ ...prev, startMileage: Number(e.target.value) }))}
-                placeholder="Current Odometer Reading"
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Checkout Time</label>
-              <input
-                type="time"
-                value={checkoutData.startTime}
-                onChange={(e) => setCheckoutData(prev => ({ ...prev, startTime: e.target.value }))}
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Shift Type</label>
-              <select
-                value={checkoutData.shiftType}
-                onChange={(e) => setCheckoutData(prev => ({ ...prev, shiftType: e.target.value as any }))}
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
-              >
-                <option value="Morning">Morning Shift</option>
-                <option value="Evening">Evening / Night Shift</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setShowCheckout(false)}
-              className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-white transition cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="rounded-full bg-forest px-5 py-2 text-xs font-semibold text-white hover:bg-forest-deep transition cursor-pointer shadow-glow-soft"
-            >
-              Confirm Checkout & Release
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* 2. EVENING CHECK-IN FORM */}
-      {activeCheckinShift && (
-        <form onSubmit={handleEndShiftSubmit} className="rounded-3xl border border-emerald/30 bg-emerald-soft/10 p-6 space-y-4 animate-fade-down max-w-3xl">
-          <h4 className="font-display font-bold text-base text-foreground flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-emerald" />
-            Receive Vehicle & Record Remittance (Evening Shift Return)
-          </h4>
-
-          <div className="p-4 rounded-2xl bg-white border border-border/80 text-xs space-y-1.5 mb-2">
-            <div>Shift ID: <span className="font-mono font-bold text-forest">{activeCheckinShift.id}</span></div>
-            <div>Driver: <span className="font-semibold text-foreground">{drivers.find(d => d.id === activeCheckinShift.driverId)?.name}</span></div>
-            <div>Vehicle: <span className="font-semibold text-foreground">{vehicles.find(v => v.id === activeCheckinShift.vehicleId)?.plateNumber}</span></div>
-            <div>Expected Daily Remittance: <span className="font-bold text-forest-deep">₦{activeCheckinShift.expectedRemittance.toLocaleString()}</span></div>
-            <div>Checkout Mileage: <span className="font-semibold">{activeCheckinShift.startMileage} km</span></div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Return Odometer Mileage (km)</label>
-              <input
-                type="number"
-                required
-                min={activeCheckinShift.startMileage}
-                value={checkinData.endMileage || ""}
-                onChange={(e) => setCheckinData(prev => ({ ...prev, endMileage: Number(e.target.value) }))}
-                placeholder="End mileage odometer"
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Actual Remittance Cash Paid (₦)</label>
-              <input
-                type="number"
-                required
-                value={checkinData.actualRemittance}
-                onChange={(e) => setCheckinData(prev => ({ ...prev, actualRemittance: Number(e.target.value) }))}
-                placeholder="Amount Paid in Naira"
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Checkin Time</label>
-              <input
-                type="time"
-                value={checkinData.endTime}
-                onChange={(e) => setCheckinData(prev => ({ ...prev, endTime: e.target.value }))}
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white"
+                min={1}
+                value={remittanceForm.amount}
+                onChange={(e) => setRemittanceForm(prev => ({ ...prev, amount: e.target.value }))}
+                placeholder="e.g. 12000"
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-mono font-bold text-forest-deep"
               />
             </div>
           </div>
+
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Operational Notes / Issue logs</label>
-            <textarea
-              value={checkinData.notes}
-              onChange={(e) => setCheckinData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="e.g. Minor scratch on rear guard, engine temp fine, short remittance because..."
-              className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white h-20"
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Remarks / Notes</label>
+            <input
+              type="text"
+              value={remittanceForm.notes}
+              onChange={(e) => setRemittanceForm(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="e.g. Normal daily return, short remittance due to minor tyre issue, etc."
+              className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white text-foreground"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
             <button
               type="button"
-              onClick={() => setActiveCheckinShift(null)}
+              onClick={() => setShowLogForm(false)}
               className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-white transition cursor-pointer"
             >
               Cancel
@@ -344,96 +242,90 @@ export function ShiftManagement() {
               type="submit"
               className="rounded-full bg-forest px-5 py-2 text-xs font-semibold text-white hover:bg-forest-deep transition cursor-pointer shadow-glow-soft"
             >
-              Log Return & End Shift
+              Log Payment
             </button>
           </div>
         </form>
       )}
 
-      {/* 3. ACTIVE AND HISTORICAL SHIFTS LIST */}
+      {/* List Search & History Grid */}
       <div className="rounded-3xl border border-border bg-white p-6 shadow-soft space-y-4">
-        <div>
-          <h4 className="font-display font-bold text-base text-foreground">Active Daily Shifts & Checkout Log</h4>
-          <p className="text-[11px] text-muted-foreground">List of drivers currently dispatched or returned today.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h4 className="font-display font-bold text-base text-foreground">Remittance Logs History</h4>
+            <p className="text-[11px] text-muted-foreground">Detailed logs of payments submitted by lease drivers.</p>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by driver name or log ID..."
+              className="w-full rounded-full border border-border pl-9 pr-4 py-2 text-xs focus:outline-emerald bg-white"
+            />
+          </div>
         </div>
 
         <div className="overflow-x-auto border border-border/70 rounded-2xl">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-mist/35 border-b border-border/80 font-bold uppercase text-muted-foreground tracking-wider">
-                <th className="p-4">ID</th>
-                <th className="p-4">Driver</th>
-                <th className="p-4">Vehicle Plate</th>
-                <th className="p-4">Branch</th>
-                <th className="p-4">Shift Type</th>
-                <th className="p-4">Odometer (Out / In)</th>
-                <th className="p-4">Timing</th>
-                <th className="p-4 text-right">Remittance Expected / Paid</th>
+                <th className="p-4">Log ID</th>
+                <th className="p-4">Driver Details</th>
+                <th className="p-4">Leased Vehicle</th>
+                <th className="p-4">Branch Hub</th>
+                <th className="p-4">Remittance Date</th>
+                <th className="p-4 text-right">Expected / Paid</th>
                 <th className="p-4 text-center">Status</th>
-                <th className="p-4 text-right">Actions</th>
+                <th className="p-4">Remarks</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
-              {shifts.map(shift => {
-                const driverObj = drivers.find(d => d.id === shift.driverId);
-                const vehicleObj = vehicles.find(v => v.id === shift.vehicleId);
-                const isOngoing = shift.status === "In Progress";
-                
-                return (
-                  <tr key={shift.id} className="hover:bg-mist/10 transition">
-                    <td className="p-4 font-mono font-bold text-forest">{shift.id}</td>
-                    <td className="p-4 font-semibold text-foreground">{driverObj?.name || shift.driverId}</td>
-                    <td className="p-4 font-mono text-foreground">{vehicleObj?.plateNumber || shift.vehicleId}</td>
-                    <td className="p-4 text-muted-foreground">{shift.branch}</td>
-                    <td className="p-4 font-semibold text-forest-deep">{shift.shiftType}</td>
-                    <td className="p-4">
-                      {shift.startMileage} km &rarr; {shift.endMileage ? `${shift.endMileage} km` : "ON ROAD"}
-                      {shift.endMileage && (
-                        <span className="block text-[10px] text-muted-foreground">
-                          Travelled: {shift.endMileage - shift.startMileage} km
+              {filteredRemittances.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                    No daily remittance logs recorded.
+                  </td>
+                </tr>
+              ) : (
+                filteredRemittances.map(log => {
+                  const driverObj = drivers.find(d => d.id === log.driverId);
+                  const isUnderpaid = (log.actualRemittance || 0) < log.expectedRemittance;
+                  
+                  return (
+                    <tr key={log.id} className="hover:bg-mist/10 transition">
+                      <td className="p-4 font-mono font-bold text-forest">{log.id}</td>
+                      <td className="p-4">
+                        <div className="font-semibold text-foreground">{driverObj?.name || log.driverId}</div>
+                        <div className="text-[10px] text-muted-foreground font-mono">{log.driverId}</div>
+                      </td>
+                      <td className="p-4 font-mono text-muted-foreground">{log.vehicleId || "N/A"}</td>
+                      <td className="p-4 text-muted-foreground">{log.branch}</td>
+                      <td className="p-4 font-medium text-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          {log.date}
                         </span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <div className="font-bold text-charcoal">{shift.date}</div>
-                      <div className="text-[10px] text-muted-foreground">{shift.startTime} {shift.endTime ? ` - ${shift.endTime}` : "(Active)"}</div>
-                    </td>
-                    <td className="p-4 text-right font-mono font-bold">
-                      <div className="text-muted-foreground text-[10px]">Exp: ₦{shift.expectedRemittance.toLocaleString()}</div>
-                      <div className="text-forest-deep">Paid: ₦{shift.actualRemittance ? shift.actualRemittance.toLocaleString() : "—"}</div>
-                    </td>
-                    <td className="p-4 text-center">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                        shift.status === "Completed" ? "bg-emerald-soft text-forest-deep" :
-                        shift.status === "Defaulted" ? "bg-red-100 text-red-500" :
-                        "bg-blue-100 text-blue-600 animate-pulse"
-                      }`}>
-                        {shift.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      {isOngoing ? (
-                        <button
-                          onClick={() => {
-                            setActiveCheckinShift(shift);
-                            setShowCheckout(false);
-                            setCheckinData(prev => ({
-                              ...prev,
-                              actualRemittance: shift.expectedRemittance,
-                              endMileage: shift.startMileage + 50 // Mock default
-                            }));
-                          }}
-                          className="rounded bg-emerald-soft text-forest-deep px-3 py-1.5 text-[10px] font-bold hover:bg-emerald hover:text-white transition cursor-pointer"
-                        >
-                          Check In Return
-                        </button>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground font-semibold">Closed</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="p-4 text-right font-mono font-bold">
+                        <div className="text-muted-foreground text-[10px]">Target: ₦{log.expectedRemittance.toLocaleString()}</div>
+                        <div className="text-forest-deep">Paid: ₦{log.actualRemittance ? log.actualRemittance.toLocaleString() : "0"}</div>
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className={`inline-block rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                          !isUnderpaid ? "bg-emerald-soft text-forest-deep" : "bg-red-100 text-red-500"
+                        }`}>
+                          {!isUnderpaid ? "Paid Full" : "Underpaid"}
+                        </span>
+                      </td>
+                      <td className="p-4 text-muted-foreground italic font-medium max-w-xs truncate" title={log.notes}>
+                        {log.notes || "—"}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

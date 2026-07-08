@@ -303,7 +303,7 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
                 </div>
 
                 <h2>Key Performance Metrics</h2>
-                <p>Vehicles on road: <strong>${onRoadCount}</strong> | Undergoing conversion/service: <strong>${inWorkshopCount}</strong> | Total CNG Conversions: <strong>${totalConversions}</strong></p>
+                <p>Vehicles Onboarded: <strong>${vehicles.length}</strong> | Undergoing conversion/service: <strong>${inWorkshopCount}</strong> | Total CNG Conversions: <strong>${totalConversions}</strong></p>
 
                 <h2>Audit and Operations Log</h2>
                 <table>
@@ -456,8 +456,8 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
             <Truck className="h-6 w-6 text-forest" />
           </div>
           <div>
-            <div className="text-xs text-muted-foreground">Vehicles on Road</div>
-            <div className="font-display text-xl font-bold text-foreground">{onRoadCount} / {vehicles.length}</div>
+            <div className="text-xs text-muted-foreground">Vehicles Onboarded</div>
+            <div className="font-display text-xl font-bold text-foreground">{vehicles.length} Tricycles</div>
           </div>
         </div>
         <div className="rounded-2xl border border-border bg-mist/20 p-5 flex items-center gap-4">

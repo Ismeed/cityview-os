@@ -34,7 +34,19 @@ function AdminPanel() {
   const navigate = useNavigate();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
-  const [selectedBranch, setSelectedBranch] = useState("ALL");
+  const [selectedBranch, setSelectedBranch] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("cityview_selected_branch") || "ALL";
+    }
+    return "ALL";
+  });
+  const handleBranchChange = (branch: string) => {
+    setSelectedBranch(branch);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("cityview_selected_branch", branch);
+      window.dispatchEvent(new Event("cityview_branch_changed"));
+    }
+  };
   const [selectedRole, setSelectedRole] = useState("System Administrator");
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer toggle state
 
@@ -54,7 +66,7 @@ function AdminPanel() {
         // Enforce default landing tabs based on user role
         if (sessionUser.role === "Super Admin") {
           setActiveTab("overview");
-          setSelectedBranch("ALL");
+          setSelectedBranch(localStorage.getItem("cityview_selected_branch") || "ALL");
           setSelectedRole("System Administrator");
         } else if (sessionUser.role === "Branch Operations Officer") {
           setActiveTab("fleet_dashboard");
@@ -201,7 +213,7 @@ function AdminPanel() {
         {/* Dynamic Navigation Header */}
         <Header 
           selectedBranch={selectedBranch}
-          setSelectedBranch={setSelectedBranch}
+          setSelectedBranch={handleBranchChange}
           selectedRole={selectedRole}
           setSelectedRole={setSelectedRole}
           onLogout={handleLogout}

@@ -223,7 +223,15 @@ const saveLocalStorageData = <T>(key: string, data: T): void => {
 
 const getIsolatedBranch = (): string | null => {
   const user = getCurrentUser();
-  if (!user || user.branch === "ALL") return null;
+  if (!user) return null;
+  if (user.branch === "ALL") {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("cityview_selected_branch") || "ALL";
+      if (selected === "ALL") return null;
+      return selected === "BR-KT" ? "Katsina HQ" : "Gombe Hub";
+    }
+    return null;
+  }
   return user.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub";
 };
 

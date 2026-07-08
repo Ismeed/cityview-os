@@ -1,14 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, Employee } from "./mockData";
 import { Search, Plus, Filter, FileText, UserPlus, CheckCircle, XCircle, AlertCircle, RefreshCw, Edit, ShieldCheck, Printer, Download, X } from "lucide-react";
 import { toast } from "sonner";
 
 export function EmployeeManagement() {
-  const [employees, setEmployees] = useState<Employee[]>(ERPStore.getEmployees());
+  const [employees, setEmployees] = useState<Employee[]>(() => ERPStore.getEmployees());
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("ALL");
   const [deptFilter, setDeptFilter] = useState("ALL");
-  
+
+  const getActiveBranchDefault = () => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("cityview_selected_branch") || "ALL";
+      if (selected === "BR-GB") return "Gombe Hub";
+    }
+    return "Katsina HQ";
+  };
+
   // Form modal triggers
   const [showAddForm, setShowAddForm] = useState(false);
   const [newEmp, setNewEmp] = useState({
@@ -16,7 +24,7 @@ export function EmployeeManagement() {
     email: "",
     role: "Technician",
     department: "Technical",
-    branch: "Katsina HQ",
+    branch: getActiveBranchDefault(),
     salary: 200000,
     category: "Regular" as "Regular" | "NYSC" | "Trainee",
     stateCode: "",
@@ -24,6 +32,16 @@ export function EmployeeManagement() {
     institution: "",
     durationMonths: 6
   });
+
+  // Keep list updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setEmployees(ERPStore.getEmployees());
+      setNewEmp(prev => ({ ...prev, branch: getActiveBranchDefault() }));
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
 
   // Edit State
   const [editEmp, setEditEmp] = useState<Employee | null>(null);

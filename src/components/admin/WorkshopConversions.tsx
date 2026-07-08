@@ -1,11 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, JobCard, CNGConversion, Employee, InventoryItem } from "./mockData";
 import { Search, Plus, Wrench, Fuel, ClipboardList, Check, User, ArrowRight, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 
 export function WorkshopConversions() {
-  const [jobCards, setJobCards] = useState<JobCard[]>(ERPStore.getJobCards());
-  const [conversions, setConversions] = useState<CNGConversion[]>(ERPStore.getConversions());
+  const [jobCards, setJobCards] = useState<JobCard[]>(() => ERPStore.getJobCards());
+  const [conversions, setConversions] = useState<CNGConversion[]>(() => ERPStore.getConversions());
+
+  // Keep list updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setJobCards(ERPStore.getJobCards());
+      setConversions(ERPStore.getConversions());
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
   
   // Section toggle: job cards vs cng conversions
   const [techSection, setTechSection] = useState<"job-cards" | "cng-conversions">("job-cards");

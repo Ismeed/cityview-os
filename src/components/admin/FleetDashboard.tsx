@@ -13,7 +13,8 @@ import {
   Square, 
   UserPlus, 
   PlusCircle,
-  FileSignature
+  FileSignature,
+  Wallet
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -74,31 +75,31 @@ export function FleetDashboard({ branchName }: FleetDashboardProps) {
 
       {/* KPI Cards Grid */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Active Vehicles */}
+        {/* Vehicles Onboarded */}
         <div className="rounded-3xl border border-border bg-white p-6 shadow-soft hover-lift">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Active Vehicles</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Vehicles Onboarded</span>
             <div className="h-9 w-9 rounded-xl bg-emerald-soft flex items-center justify-center text-forest-deep">
               <Truck className="h-5 w-5 text-forest" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="font-display text-2xl font-bold text-foreground">{activeVehicles} / {vehicles.length}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">{vehiclesOut} currently dispatched on-road</p>
+            <h3 className="font-display text-2xl font-bold text-foreground">{vehicles.length} Tricycles</h3>
+            <p className="text-[10px] text-muted-foreground mt-1">{vehicles.filter(v => v.status === "Available").length} Available for Lease</p>
           </div>
         </div>
 
-        {/* Drivers on Shift */}
+        {/* Active Leases */}
         <div className="rounded-3xl border border-border bg-white p-6 shadow-soft hover-lift">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Active Shifts</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Active Leases</span>
             <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-              <Users className="h-5 w-5" />
+              <FileSignature className="h-5 w-5 text-blue-600" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="font-display text-2xl font-bold text-foreground">{driversOnShift} Drivers</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">{vehiclesReturned} shifts completed today</p>
+            <h3 className="font-display text-2xl font-bold text-foreground">{outstandingContracts} Contracts</h3>
+            <p className="text-[10px] text-muted-foreground mt-1">{contractsNearCompletion} near completion (&ge;80%)</p>
           </div>
         </div>
 
@@ -147,18 +148,18 @@ export function FleetDashboard({ branchName }: FleetDashboardProps) {
           
           <div className="grid gap-2">
             <button
-              onClick={() => handleQuickAction("Start Shift")}
+              onClick={() => handleQuickAction("Record Remittance")}
               className="flex items-center gap-3 w-full rounded-xl bg-mist/40 border border-border/50 p-3 text-xs font-semibold text-foreground hover:bg-forest hover:text-white transition group"
             >
-              <Play className="h-4 w-4 text-emerald group-hover:text-white shrink-0" />
-              <span>Start Daily Shift</span>
+              <Wallet className="h-4 w-4 text-emerald group-hover:text-white shrink-0" />
+              <span>Record Daily Remittance</span>
             </button>
             <button
-              onClick={() => handleQuickAction("End Shift")}
+              onClick={() => handleQuickAction("Create Contract")}
               className="flex items-center gap-3 w-full rounded-xl bg-mist/40 border border-border/50 p-3 text-xs font-semibold text-foreground hover:bg-forest hover:text-white transition group"
             >
-              <Square className="h-4 w-4 text-red-500 group-hover:text-white shrink-0" />
-              <span>Close Shift & Remit</span>
+              <FileSignature className="h-4 w-4 text-forest group-hover:text-white shrink-0" />
+              <span>Create Lease Contract</span>
             </button>
             <button
               onClick={() => handleQuickAction("Onboard Driver")}
@@ -214,8 +215,8 @@ export function FleetDashboard({ branchName }: FleetDashboardProps) {
         {/* Recent Fleet Activities */}
         <div className="rounded-3xl border border-border bg-white p-6 shadow-soft space-y-4">
           <div>
-            <h4 className="font-display font-bold text-base text-foreground">Recent Shift Activity</h4>
-            <p className="text-[11px] text-muted-foreground">Last shifts logged for {branchName}.</p>
+            <h4 className="font-display font-bold text-base text-foreground">Recent Remittance Logs</h4>
+            <p className="text-[11px] text-muted-foreground">Last payments logged for {branchName}.</p>
           </div>
 
           <div className="space-y-3.5">
@@ -224,15 +225,17 @@ export function FleetDashboard({ branchName }: FleetDashboardProps) {
               return (
                 <div key={s.id} className="text-xs border-b border-border/50 pb-2.5 last:border-0">
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span>{s.date} at {s.startTime}</span>
-                    <span className={`font-semibold uppercase ${s.status === "Completed" ? "text-emerald" : "text-blue-500"}`}>{s.status}</span>
+                    <span>{s.date}</span>
+                    <span className={`font-semibold uppercase ${s.status === "Completed" ? "text-emerald" : "text-amber-500"}`}>
+                      {s.status === "Completed" ? "Paid Full" : "Underpaid"}
+                    </span>
                   </div>
                   <div className="mt-1 font-semibold text-foreground">
                     Driver: {driver?.name || s.driverId} &rarr; Vehicle: {s.vehicleId}
                   </div>
                   {s.actualRemittance && (
                     <div className="mt-0.5 text-muted-foreground text-[10px]">
-                      Remitted: <span className="font-bold text-forest-deep">{formatNaira(s.actualRemittance)}</span>
+                      Amount Received: <span className="font-bold text-forest-deep">{formatNaira(s.actualRemittance)}</span>
                     </div>
                   )}
                 </div>

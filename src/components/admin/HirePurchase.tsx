@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, HirePurchaseContract, Driver, Vehicle } from "./mockData";
 import { Search, Calculator, Calendar, FileSignature, CheckCircle, AlertTriangle, History, Clock, X, Printer, Download } from "lucide-react";
 import { toast } from "sonner";
 
 export function HirePurchase() {
-  const [contracts, setContracts] = useState<HirePurchaseContract[]>(ERPStore.getHPContracts());
+  const [contracts, setContracts] = useState<HirePurchaseContract[]>(() => ERPStore.getHPContracts());
   const [search, setSearch] = useState("");
+
+  // Keep list updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setContracts(ERPStore.getHPContracts());
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
   
   // HP Calculator State
   const [calcData, setCalcData] = useState({

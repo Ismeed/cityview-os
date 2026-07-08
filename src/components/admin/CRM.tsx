@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, MessageSquare, AlertCircle, Phone, Calendar, UserCheck, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,15 +55,32 @@ export function CRM() {
   const [search, setSearch] = useState("");
   const [section, setSection] = useState<"clients" | "appointments" | "tickets">("clients");
 
+  const getActiveBranchDefault = () => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("cityview_selected_branch") || "ALL";
+      if (selected === "BR-GB") return "Gombe Hub";
+    }
+    return "Katsina HQ";
+  };
+
   // Client add form state
   const [showClientForm, setShowClientForm] = useState(false);
   const [newClient, setNewClient] = useState({
     name: "",
     phone: "",
     type: "Individual" as Customer["type"],
-    branch: "Katsina HQ",
+    branch: getActiveBranchDefault(),
     notes: ""
   });
+
+  // Keep default branch selection updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setNewClient(prev => ({ ...prev, branch: getActiveBranchDefault() }));
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
 
   // Appointment add form state
   const [showApptForm, setShowApptForm] = useState(false);

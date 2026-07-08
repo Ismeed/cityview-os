@@ -1,21 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, Driver, HirePurchaseContract } from "./mockData";
 import { Search, UserPlus, Phone, ShieldCheck, FileSignature, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export function DriverManagement() {
-  const [drivers, setDrivers] = useState<Driver[]>(ERPStore.getDrivers());
+  const [drivers, setDrivers] = useState<Driver[]>(() => ERPStore.getDrivers());
   const [search, setSearch] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+
+  const getActiveBranchDefault = () => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("cityview_selected_branch") || "ALL";
+      if (selected === "BR-GB") return "Gombe Hub";
+    }
+    return "Katsina HQ";
+  };
+
   const [newDriver, setNewDriver] = useState({
     name: "",
     phone: "",
     license: "",
     guarantorName: "",
     guarantorPhone: "",
-    branch: "Katsina HQ",
+    branch: getActiveBranchDefault(),
     remittanceRate: 12000
   });
+
+  // Keep list updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setDrivers(ERPStore.getDrivers());
+      setNewDriver(prev => ({ ...prev, branch: getActiveBranchDefault() }));
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
 
   const handleRegisterDriver = (e: React.FormEvent) => {
     e.preventDefault();

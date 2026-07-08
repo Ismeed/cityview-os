@@ -1,14 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, Vehicle, Driver } from "./mockData";
 import { Search, Plus, Filter, Info, Fuel, ShieldAlert, User, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export function FleetManagement() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>(ERPStore.getVehicles());
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => ERPStore.getVehicles());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [conversionFilter, setConversionFilter] = useState("ALL");
-  
+
+  const getActiveBranchDefault = () => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("cityview_selected_branch") || "ALL";
+      if (selected === "BR-GB") return "Gombe Hub";
+    }
+    return "Katsina HQ";
+  };
+
   // Registration form state
   const [showAddForm, setShowAddForm] = useState(false);
   const [newVeh, setNewVeh] = useState({
@@ -16,8 +24,18 @@ export function FleetManagement() {
     type: "Tricycle" as "Tricycle" | "Mini Bus" | "Car" | "Truck",
     fuelType: "CNG" as "Petrol" | "CNG" | "Hybrid",
     conversionStatus: "Converted" as "Converted" | "Petrol Only" | "In-Progress",
-    branch: "Katsina HQ"
+    branch: getActiveBranchDefault()
   });
+
+  // Keep list updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setVehicles(ERPStore.getVehicles());
+      setNewVeh(prev => ({ ...prev, branch: getActiveBranchDefault() }));
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
 
   const handleAddVehicle = (e: React.FormEvent) => {
     e.preventDefault();
