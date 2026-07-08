@@ -142,13 +142,20 @@ function AdminPanel() {
       );
     }
 
+    const isAdminUser = user.role === "Super Admin" || 
+                        user.role === "System Administrator" || 
+                        user.role === "Managing Director (CEO)" || 
+                        user.role === "Executive Director";
+    const activeBranchId = isAdminUser ? selectedBranch : user.branch;
+    const activeBranchName = activeBranchId === "ALL" ? "Katsina HQ" : activeBranchId === "BR-KT" ? "Katsina HQ" : "Gombe Hub";
+
     switch (activeTab) {
       case "overview":
-        return <ExecutiveDashboard branchId={selectedBranch} />;
+        return <ExecutiveDashboard branchId={activeBranchId} />;
       case "fleet_dashboard":
-        return <FleetDashboard branchName={user.branch === "ALL" ? "Katsina HQ" : user.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub"} />;
+        return <FleetDashboard branchName={activeBranchName} />;
       case "workshop_dashboard":
-        return <WorkshopDashboard branchName={user.branch === "ALL" ? "Katsina HQ" : user.branch === "BR-KT" ? "Katsina HQ" : "Gombe Hub"} />;
+        return <WorkshopDashboard branchName={activeBranchName} />;
       case "branches":
         return <BranchManagement />;
       case "employees":
@@ -184,7 +191,7 @@ function AdminPanel() {
         return <Settings currentUser={mappedUser} />;
       }
       default:
-        return <ExecutiveDashboard branchId={selectedBranch} />;
+        return <ExecutiveDashboard branchId={activeBranchId} />;
     }
   };
 

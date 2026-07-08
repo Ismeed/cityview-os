@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, JobCard, CNGConversion, Employee } from "./mockData";
 import { 
   TrendingUp, 
@@ -20,10 +20,22 @@ interface WorkshopDashboardProps {
 }
 
 export function WorkshopDashboard({ branchName }: WorkshopDashboardProps) {
-  const [jobCards] = useState<JobCard[]>(ERPStore.getJobCards());
-  const [conversions] = useState<CNGConversion[]>(ERPStore.getConversions());
-  const [employees] = useState<Employee[]>(ERPStore.getEmployees());
-  const [transactions] = useState(() => ERPStore.getTransactions());
+  const [jobCards, setJobCards] = useState<JobCard[]>(() => ERPStore.getJobCards());
+  const [conversions, setConversions] = useState<CNGConversion[]>(() => ERPStore.getConversions());
+  const [employees, setEmployees] = useState<Employee[]>(() => ERPStore.getEmployees());
+  const [transactions, setTransactions] = useState(() => ERPStore.getTransactions());
+
+  // Keep list updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setJobCards(ERPStore.getJobCards());
+      setConversions(ERPStore.getConversions());
+      setEmployees(ERPStore.getEmployees());
+      setTransactions(ERPStore.getTransactions());
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
 
   // Metrics calculations
   const awaitingInspection = jobCards.filter(j => j.status === "Inspecting").length +

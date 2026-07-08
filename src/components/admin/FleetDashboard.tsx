@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ERPStore, Vehicle, Driver, Shift, HirePurchaseContract } from "./mockData";
 import { 
   TrendingUp, 
@@ -23,11 +23,24 @@ interface FleetDashboardProps {
 }
 
 export function FleetDashboard({ branchName }: FleetDashboardProps) {
-  const [vehicles] = useState<Vehicle[]>(ERPStore.getVehicles());
-  const [drivers] = useState<Driver[]>(ERPStore.getDrivers());
-  const [shifts] = useState<Shift[]>(ERPStore.getShifts());
-  const [contracts] = useState<HirePurchaseContract[]>(ERPStore.getHPContracts());
-  const [transactions] = useState(() => ERPStore.getTransactions());
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => ERPStore.getVehicles());
+  const [drivers, setDrivers] = useState<Driver[]>(() => ERPStore.getDrivers());
+  const [shifts, setShifts] = useState<Shift[]>(() => ERPStore.getShifts());
+  const [contracts, setContracts] = useState<HirePurchaseContract[]>(() => ERPStore.getHPContracts());
+  const [transactions, setTransactions] = useState(() => ERPStore.getTransactions());
+
+  // Keep list updated on branch change
+  useEffect(() => {
+    const refreshData = () => {
+      setVehicles(ERPStore.getVehicles());
+      setDrivers(ERPStore.getDrivers());
+      setShifts(ERPStore.getShifts());
+      setContracts(ERPStore.getHPContracts());
+      setTransactions(ERPStore.getTransactions());
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
 
   // Metrics calculations
   const activeVehicles = vehicles.filter(v => v.status === "Available" || v.status === "On Road").length;
