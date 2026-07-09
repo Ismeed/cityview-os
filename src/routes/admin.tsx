@@ -50,6 +50,13 @@ function AdminPanel() {
   const [selectedRole, setSelectedRole] = useState("System Administrator");
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer toggle state
 
+  // Pull Cloud Data from Supabase Database on startup
+  useEffect(() => {
+    import("../lib/supabaseSync").then(m => {
+      m.pullAllDataFromCloud();
+    }).catch(err => console.warn("[Supabase Sync] Startup fetch error:", err));
+  }, []);
+
   // Check login credentials on mount.
   // Uses a retry mechanism (up to 500ms) to handle mobile Safari/Android
   // where localStorage may not be immediately readable after navigation.

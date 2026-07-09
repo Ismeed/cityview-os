@@ -229,6 +229,11 @@ const loadLocalStorageData = <T>(key: string, initialData: T): T => {
 const saveLocalStorageData = <T>(key: string, data: T): void => {
   if (typeof window !== "undefined") {
     localStorage.setItem(key, JSON.stringify(data));
+    if (Array.isArray(data)) {
+      import("../../lib/supabaseSync").then(m => {
+        m.syncTableToCloud(key, data);
+      }).catch(err => console.error("[Supabase Sync Interceptor] import error:", err));
+    }
   }
 };
 

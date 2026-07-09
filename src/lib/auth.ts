@@ -286,5 +286,8 @@ export function getAccounts() {
 export function saveAccounts(users: any[]) { 
   if (typeof window !== "undefined") {
     localStorage.setItem("cityview_erp_users", JSON.stringify(users));
+    import("./supabaseSync").then(m => {
+      m.syncTableToCloud("cityview_erp_users", users);
+    }).catch(err => console.error("[Supabase Sync Interceptor] users save error:", err));
   }
 }
