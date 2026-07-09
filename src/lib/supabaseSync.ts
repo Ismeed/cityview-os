@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { toast } from "sonner";
 
 const TABLE_MAP: Record<string, string> = {
   "cityview_erp_branches": "branches",
@@ -42,9 +43,18 @@ export async function syncTableToCloud(storageKey: string, data: any[]) {
     const { error } = await supabase.from(dbTable).upsert(cleaned);
     if (error) {
       console.warn(`[Supabase Sync] Upsert failed on table "${dbTable}":`, error.message);
+      toast.error(`Database Sync Failed (${dbTable})`, {
+        description: error.message,
+        duration: 8000
+      });
+    } else {
+      console.info(`[Supabase Sync] Successfully saved "${dbTable}" changes to cloud.`);
     }
   } catch (err) {
     console.error(`[Supabase Sync] Failed to sync ${dbTable}:`, err);
+    toast.error(`Network Database Error`, {
+      description: `Failed to connect to Supabase for ${dbTable} sync.`
+    });
   }
 }
 
@@ -79,6 +89,9 @@ export async function pullAllDataFromCloud(): Promise<boolean> {
   if (successCount > 0) {
     console.info(`[Supabase Sync] Successfully synchronized ${successCount} tables. Refreshing views.`);
     window.dispatchEvent(new Event("cityview_branch_changed"));
+    toast.success("Database Synced", {
+      description: `Synchronized ${successCount} operational tables from Supabase.`
+    });
     return true;
   }
   return false;
