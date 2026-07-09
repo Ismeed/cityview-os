@@ -162,6 +162,7 @@ export function Header({
   ];
 
   const isSuperAdmin = user.role === "Super Admin";
+  const canChangeBranch = user.branch === "ALL";
 
   return (
     <header className="sticky top-0 z-40 flex h-20 w-full items-center justify-between border-b border-border bg-white px-4 sm:px-8 shadow-soft">
@@ -177,10 +178,10 @@ export function Header({
 
         <div className="truncate">
           <h1 className="font-display text-sm sm:text-base md:text-lg font-bold text-foreground truncate">
-            {isSuperAdmin ? "CityView Digital HQ" : user.branch === "BR-KT" ? "Katsina Branch Office" : "Gombe Branch Office"}
+            {user.branch === "ALL" ? "CityView Digital HQ" : user.branch === "BR-KT" ? "Katsina Branch Office" : "Gombe Branch Office"}
           </h1>
           <p className="text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.12em] text-muted-foreground truncate">
-            {isSuperAdmin ? "Enterprise Operations System" : user.department}
+            {user.branch === "ALL" ? "Enterprise Operations System" : user.department}
           </p>
         </div>
       </div>
@@ -213,8 +214,8 @@ export function Header({
           )}
         </div>
 
-        {/* Global Branch Filter (Simulation for Super Admin / Static Badge for Officers) */}
-        {isSuperAdmin ? (
+        {/* Global Branch Filter (Simulation for Super Admin & Global Users / Static Badge for Officers) */}
+        {canChangeBranch ? (
           <div className="relative">
             <button 
               onClick={() => {
@@ -244,7 +245,7 @@ export function Header({
                     onClick={() => {
                       setSelectedBranch(b.id);
                       setShowBranchSelector(false);
-                      ERPStore.addAuditLog("Super Admin", "Super Admin", "Simulation Branch Filter", `Simulated active branch context to: ${b.name}`);
+                      ERPStore.addAuditLog(user.name, user.role, "Simulation Branch Filter", `Simulated active branch context to: ${b.name}`);
                     }}
                     className={`w-full text-left rounded-xl px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
                       selectedBranch === b.id 
