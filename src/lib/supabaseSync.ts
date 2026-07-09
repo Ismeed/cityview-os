@@ -77,10 +77,11 @@ export async function pullAllDataFromCloud(): Promise<boolean> {
         console.warn(`[Supabase Sync] Pull failed for table "${dbTable}":`, error.message);
         continue;
       }
-      if (data && data.length > 0) {
-        localStorage.setItem(storageKey, JSON.stringify(data));
-        successCount++;
-      }
+      // Always write Supabase result to localStorage — even empty arrays.
+      // This ensures that if a table is cleared in Supabase, the browser
+      // cache is also cleared immediately on the next page load.
+      localStorage.setItem(storageKey, JSON.stringify(data ?? []));
+      successCount++;
     } catch (err) {
       console.error(`[Supabase Sync] Connection error during ${dbTable} sync:`, err);
     }
@@ -90,7 +91,7 @@ export async function pullAllDataFromCloud(): Promise<boolean> {
     console.info(`[Supabase Sync] Successfully synchronized ${successCount} tables. Refreshing views.`);
     window.dispatchEvent(new Event("cityview_branch_changed"));
     toast.success("Database Synced", {
-      description: `Synchronized ${successCount} operational tables from Supabase.`
+      description: `Cloud database loaded into session.`
     });
     return true;
   }
