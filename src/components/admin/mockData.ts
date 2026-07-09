@@ -277,6 +277,9 @@ export class ERPStore {
     if (!branch) return raw;
     return raw.filter(e => e.branch === branch);
   };
+  static getAllEmployees = () => {
+    return loadLocalStorageData<Employee[]>("cityview_erp_employees", initialEmployees);
+  };
   static saveEmployees = (data: Employee[]) => {
     const branch = getIsolatedBranch();
     if (!branch) {

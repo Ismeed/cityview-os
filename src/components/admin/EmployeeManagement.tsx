@@ -52,8 +52,15 @@ export function EmployeeManagement() {
 
   const handleAddEmployee = (e: React.FormEvent) => {
     e.preventDefault();
+    const allEmployees = ERPStore.getAllEmployees();
+    const maxId = allEmployees.reduce((max, emp) => {
+      const num = parseInt(emp.id.replace("EMP-", ""), 10);
+      return isNaN(num) ? max : Math.max(max, num);
+    }, 0);
+    const nextId = `EMP-${(maxId + 1).toString().padStart(2, "0")}`;
+
     const newEntry: Employee = {
-      id: `EMP-${(employees.length + 1).toString().padStart(2, "0")}`,
+      id: nextId,
       name: newEmp.name,
       email: newEmp.email,
       role: newEmp.role,
