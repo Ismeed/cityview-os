@@ -89,6 +89,7 @@ export interface JobCard {
   partsUsed: { partId: string; name: string; quantity: number; cost: number }[];
   status: "Inspecting" | "Diagnostics" | "Awaiting Approval" | "Repairing" | "Completed" | "Handed Over";
   date: string;
+  branch: string;
 }
 
 export interface CNGConversionPayment {
@@ -115,6 +116,7 @@ export interface CNGConversion {
   amountPaid: number;
   paymentStatus: "Pending" | "Partially Paid" | "Fully Paid";
   paymentHistory?: CNGConversionPayment[];
+  branch: string;
 }
 
 export interface InventoryItem {
@@ -174,9 +176,9 @@ const initialInventory: InventoryItem[] = [];
 const initialTransactions: Transaction[] = [];
 const initialAuditLogs: AuditLog[] = [];
 
-import { getCurrentUser } from "../../lib/auth";
+import { getCurrentUser, getAccounts, saveAccounts } from "../../lib/auth";
 
-const DATA_SCHEMA_VERSION = "v9"; // bumped: added CNG Conversion installment payments tracking
+const DATA_SCHEMA_VERSION = "v10"; // bumped: fixed branch filters and unified credentials store saves
 const SCHEMA_VERSION_KEY  = "cityview_erp_schema_version";
 
 // On first page load (per browser session), check if the stored schema version
@@ -374,8 +376,7 @@ export class ERPStore {
     const raw = loadLocalStorageData<JobCard[]>("cityview_erp_job_cards", initialJobCards);
     const branch = getIsolatedBranch();
     if (!branch) return raw;
-    const prefix = branch === "Katsina HQ" ? "KT" : "GB";
-    return raw.filter(j => j.vehiclePlate.startsWith(prefix));
+    return raw.filter(j => j.branch === branch);
   };
   static saveJobCards = (data: JobCard[]) => {
     const branch = getIsolatedBranch();
@@ -385,9 +386,9 @@ export class ERPStore {
       return;
     }
     const raw = loadLocalStorageData<JobCard[]>("cityview_erp_job_cards", initialJobCards);
-    const prefix = branch === "Katsina HQ" ? "KT" : "GB";
-    const otherBranches = raw.filter(j => !j.vehiclePlate.startsWith(prefix));
-    saveLocalStorageData("cityview_erp_job_cards", [...otherBranches, ...data]);
+    const otherBranches = raw.filter(j => j.branch !== branch);
+    const tagged = data.map(j => ({ ...j, branch }));
+    saveLocalStorageData("cityview_erp_job_cards", [...otherBranches, ...tagged]);
     ERPStore.addToSyncQueue("Update Job Cards", `Updated technical job cards list for ${branch}`);
   };
 
@@ -395,8 +396,7 @@ export class ERPStore {
     const raw = loadLocalStorageData<CNGConversion[]>("cityview_erp_conversions", initialConversions);
     const branch = getIsolatedBranch();
     if (!branch) return raw;
-    const prefix = branch === "Katsina HQ" ? "KT" : "GB";
-    return raw.filter(c => c.vehiclePlate.startsWith(prefix));
+    return raw.filter(c => c.branch === branch);
   };
   static saveConversions = (data: CNGConversion[]) => {
     const branch = getIsolatedBranch();
@@ -406,9 +406,9 @@ export class ERPStore {
       return;
     }
     const raw = loadLocalStorageData<CNGConversion[]>("cityview_erp_conversions", initialConversions);
-    const prefix = branch === "Katsina HQ" ? "KT" : "GB";
-    const otherBranches = raw.filter(c => !c.vehiclePlate.startsWith(prefix));
-    saveLocalStorageData("cityview_erp_conversions", [...otherBranches, ...data]);
+    const otherBranches = raw.filter(c => c.branch !== branch);
+    const tagged = data.map(c => ({ ...c, branch }));
+    saveLocalStorageData("cityview_erp_conversions", [...otherBranches, ...tagged]);
     ERPStore.addToSyncQueue("Update CNG Conversions", `Updated CNG Conversion jobs for ${branch}`);
   };
 
@@ -482,8 +482,8 @@ export class ERPStore {
     }
   };
 
-  static getUsers = () => loadLocalStorageData<MockUser[]>("cityview_erp_users", mockUsers);
-  static saveUsers = (data: MockUser[]) => saveLocalStorageData("cityview_erp_users", data);
+  static getUsers = () => getAccounts() as any[];
+  static saveUsers = (data: MockUser[]) => saveAccounts(data);
 }
 
 export interface MockUser {

@@ -80,7 +80,8 @@ export function WorkshopConversions() {
       laborCharges: Number(newJob.laborCharges),
       partsUsed: [],
       status: "Inspecting",
-      date: new Date().toISOString().split("T")[0]
+      date: new Date().toISOString().split("T")[0],
+      branch: getActiveBranchDefault()
     };
 
     const updated = [newEntry, ...jobCards];
@@ -144,7 +145,8 @@ export function WorkshopConversions() {
           paymentMethod: "Bank Transfer",
           notes: "Initial installment deposit"
         }
-      ] : []
+      ] : [],
+      branch: getActiveBranchDefault()
     };
 
     const updated = [newEntry, ...conversions];

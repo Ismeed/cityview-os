@@ -163,7 +163,8 @@ export function FrontDesk({ selectedBranch = "ALL" }: FrontDeskProps) {
       laborCharges: 0,
       partsUsed: [],
       status: "Inspecting",
-      date: today
+      date: today,
+      branch: activeBranchName || "Katsina HQ"
     };
     const cards = ERPStore.getJobCards();
     ERPStore.saveJobCards([newJobCard, ...cards]);

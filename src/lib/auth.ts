@@ -159,7 +159,7 @@ interface StoredUser {
   disabled?: boolean;
 }
 
-function loadStoredUsers(): StoredUser[] {
+export function loadStoredUsers(): StoredUser[] {
   if (typeof window === "undefined") return SEED_ACCOUNTS.map(a => ({
     email: a.email, name: a.name, role: a.role,
     department: a.department, branch: a.branch,
@@ -280,5 +280,11 @@ export function checkBranchAuthorization(user: AuthUser | null, targetBranch: st
 
 // Keep legacy export alias for backward compatibility
 export const DEMO_ACCOUNTS = SEED_ACCOUNTS;
-export function getAccounts() { return {}; }
-export function saveAccounts(_: unknown) { /* no-op */ }
+export function getAccounts() { 
+  return loadStoredUsers(); 
+}
+export function saveAccounts(users: any[]) { 
+  if (typeof window !== "undefined") {
+    localStorage.setItem("cityview_erp_users", JSON.stringify(users));
+  }
+}

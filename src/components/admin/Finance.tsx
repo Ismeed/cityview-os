@@ -9,10 +9,19 @@ export function Finance() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
 
+  const getActiveBranchDefault = () => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("cityview_selected_branch") || "ALL";
+      if (selected === "BR-GB") return "Gombe Hub";
+    }
+    return "Katsina HQ";
+  };
+
   // Keep list updated on branch change
   useEffect(() => {
     const refreshData = () => {
       setTransactions(ERPStore.getTransactions());
+      setNewTrans(prev => ({ ...prev, branch: getActiveBranchDefault() }));
     };
     window.addEventListener("cityview_branch_changed", refreshData);
     return () => window.removeEventListener("cityview_branch_changed", refreshData);
@@ -25,7 +34,7 @@ export function Finance() {
     amount: 15000,
     category: "Other" as Transaction["category"],
     description: "",
-    branch: "Katsina HQ"
+    branch: getActiveBranchDefault()
   });
 
   const handleAddTransaction = (e: React.FormEvent) => {
