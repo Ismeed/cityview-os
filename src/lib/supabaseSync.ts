@@ -13,7 +13,94 @@ const TABLE_MAP: Record<string, string> = {
   "cityview_erp_inventory": "inventory",
   "cityview_erp_transactions": "transactions",
   "cityview_erp_audit_logs": "audit_logs",
-  "cityview_erp_users": "users"
+  "cityview_erp_users": "users",
+  "cityview_erp_customers": "crm_customers",
+  "cityview_erp_appointments": "crm_appointments",
+  "cityview_erp_tickets": "crm_tickets"
+};
+
+// CamelCase frontend keys mapped to lowercase Postgres columns
+const KEY_MAPS: Record<string, Record<string, string>> = {
+  "vehicles": {
+    "plateNumber": "platenumber",
+    "fuelType": "fueltype",
+    "conversionStatus": "conversionstatus",
+    "assignedDriverId": "assigneddriverid",
+    "lastServiceDate": "lastservicedate"
+  },
+  "conversions": {
+    "customerName": "customername",
+    "vehiclePlate": "vehicleplate",
+    "vehicleModel": "vehiclemodel",
+    "cngKitType": "cngkittype",
+    "cylinderSize": "cylindersize",
+    "dateStarted": "datestarted",
+    "dateCompleted": "datecompleted",
+    "paymentType": "paymenttype",
+    "amountPaid": "amountpaid",
+    "paymentStatus": "paymentstatus",
+    "paymentHistory": "paymenthistory"
+  },
+  "employees": {
+    "attendanceToday": "attendancetoday",
+    "stateCode": "statecode",
+    "batchGroup": "batchgroup",
+    "durationMonths": "durationmonths"
+  },
+  "drivers": {
+    "remittanceRate": "remittancerate",
+    "guarantorName": "guarantorname",
+    "guarantorPhone": "guarantorphone"
+  },
+  "shifts": {
+    "driverId": "driverid",
+    "vehicleId": "vehicleid",
+    "shiftType": "shifttype",
+    "startTime": "starttime",
+    "endTime": "endtime",
+    "startMileage": "startmileage",
+    "endMileage": "endmileage",
+    "expectedRemittance": "expectedremittance",
+    "actualRemittance": "actualremittance"
+  },
+  "hp_contracts": {
+    "driverId": "driverid",
+    "vehicleId": "vehicleid",
+    "totalAmount": "totalamount",
+    "balancePaid": "balancepaid",
+    "dailyTarget": "dailytarget",
+    "startDate": "startdate",
+    "endDateExpected": "enddateexpected",
+    "paymentHistory": "paymenthistory"
+  },
+  "job_cards": {
+    "customerName": "customername",
+    "customerPhone": "customerphone",
+    "vehiclePlate": "vehicleplate",
+    "vehicleModel": "vehiclemodel",
+    "issueDescription": "issuedescription",
+    "assignedTechnicianId": "assignedtechnicianid",
+    "laborCharges": "laborcharges",
+    "partsUsed": "partsused"
+  },
+  "inventory": {
+    "stockLevel": "stocklevel",
+    "minStockLevel": "minstocklevel",
+    "unitPrice": "unitprice"
+  },
+  "users": {
+    "branchName": "branchname",
+    "passwordHash": "passwordhash"
+  },
+  "crm_appointments": {
+    "customerName": "customername",
+    "vehicleModel": "vehiclemodel",
+    "serviceType": "servicetype"
+  },
+  "crm_tickets": {
+    "customerName": "customername",
+    "dateCreated": "datecreated"
+  }
 };
 
 // Check if credentials are set
@@ -24,6 +111,38 @@ const isConfigured = () => {
 };
 
 /**
+ * Normalizes a row object to database column layout (lowercase keys)
+ */
+function toDbPayload(tableName: string, row: any): any {
+  const map = KEY_MAPS[tableName];
+  if (!map) return row;
+  const newRow: any = {};
+  for (const [key, value] of Object.entries(row)) {
+    const dbKey = map[key] || key;
+    newRow[dbKey] = value;
+  }
+  return newRow;
+}
+
+/**
+ * Normalizes a database row object back to frontend camelCase property layout
+ */
+function fromDbPayload(tableName: string, row: any): any {
+  const map = KEY_MAPS[tableName];
+  if (!map) return row;
+  const revMap: Record<string, string> = {};
+  for (const [camel, dbKey] of Object.entries(map)) {
+    revMap[dbKey] = camel;
+  }
+  const newRow: any = {};
+  for (const [key, value] of Object.entries(row)) {
+    const camelKey = revMap[key] || key;
+    newRow[camelKey] = value;
+  }
+  return newRow;
+}
+
+/**
  * Push local database arrays up to Supabase using upsert
  */
 export async function syncTableToCloud(storageKey: string, data: any[]) {
@@ -32,13 +151,7 @@ export async function syncTableToCloud(storageKey: string, data: any[]) {
   if (!dbTable) return;
 
   try {
-    // clean nested objects (like partsUsed array in JobCard or paymentHistory in HirePurchase) if PostgreSQL requires text/json
-    const cleaned = data.map(item => {
-      const copy = { ...item };
-      // Map JS camelCase keys to match Supabase schema if necessary, or push as-is
-      // Supabase handles jsonb fields perfectly if passed as objects/arrays
-      return copy;
-    });
+    const cleaned = data.map(item => toDbPayload(dbTable, item));
 
     const { error } = await supabase.from(dbTable).upsert(cleaned);
     if (error) {
@@ -77,10 +190,10 @@ export async function pullAllDataFromCloud(): Promise<boolean> {
         console.warn(`[Supabase Sync] Pull failed for table "${dbTable}":`, error.message);
         continue;
       }
-      // Always write Supabase result to localStorage — even empty arrays.
-      // This ensures that if a table is cleared in Supabase, the browser
-      // cache is also cleared immediately on the next page load.
-      localStorage.setItem(storageKey, JSON.stringify(data ?? []));
+      
+      // Map columns back to frontend camelCase casing structure
+      const mappedData = (data ?? []).map(item => fromDbPayload(dbTable, item));
+      localStorage.setItem(storageKey, JSON.stringify(mappedData));
       successCount++;
     } catch (err) {
       console.error(`[Supabase Sync] Connection error during ${dbTable} sync:`, err);

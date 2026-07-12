@@ -116,6 +116,7 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
     }
 
     transactions.forEach(t => {
+      if (!t.date || typeof t.date !== "string") return;
       // date is stored as "YYYY-MM-DD"
       const monthKey = t.date.slice(0, 7);
       const slot = months.find(m => m.key === monthKey);
@@ -192,20 +193,20 @@ export function ExecutiveDashboard({ branchId }: ExecutiveDashboardProps) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
   const currentMonthRev = transactions
-    .filter(t => t.type === "Revenue" && t.date.startsWith(MONTH_KEYS[0]))
+    .filter(t => t.type === "Revenue" && t.date && typeof t.date === "string" && t.date.startsWith(MONTH_KEYS[0]))
     .reduce((a, t) => a + t.amount, 0);
   const prevMonthRev = transactions
-    .filter(t => t.type === "Revenue" && t.date.startsWith(MONTH_KEYS[1]))
+    .filter(t => t.type === "Revenue" && t.date && typeof t.date === "string" && t.date.startsWith(MONTH_KEYS[1]))
     .reduce((a, t) => a + t.amount, 0);
   const revTrend = prevMonthRev > 0
     ? (((currentMonthRev - prevMonthRev) / prevMonthRev) * 100).toFixed(1)
     : null;
 
   const currentMonthExp = transactions
-    .filter(t => t.type === "Expense" && t.date.startsWith(MONTH_KEYS[0]))
+    .filter(t => t.type === "Expense" && t.date && typeof t.date === "string" && t.date.startsWith(MONTH_KEYS[0]))
     .reduce((a, t) => a + t.amount, 0);
   const prevMonthExp = transactions
-    .filter(t => t.type === "Expense" && t.date.startsWith(MONTH_KEYS[1]))
+    .filter(t => t.type === "Expense" && t.date && typeof t.date === "string" && t.date.startsWith(MONTH_KEYS[1]))
     .reduce((a, t) => a + t.amount, 0);
   const expTrend = prevMonthExp > 0
     ? (((currentMonthExp - prevMonthExp) / prevMonthExp) * 100).toFixed(1)

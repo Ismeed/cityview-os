@@ -1,56 +1,12 @@
 import { useState, useEffect } from "react";
 import { Search, Plus, MessageSquare, AlertCircle, Phone, Calendar, UserCheck, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
-
-interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-  type: "Individual" | "Corporate" | "Fleet Owner" | "Government";
-  branch: string;
-  notes?: string;
-}
-
-interface Appointment {
-  id: string;
-  customerName: string;
-  phone: string;
-  vehicleModel: string;
-  serviceType: string;
-  date: string;
-  time: string;
-  status: "Scheduled" | "Completed" | "Cancelled";
-}
-
-interface Ticket {
-  id: string;
-  customerName: string;
-  subject: string;
-  priority: "High" | "Medium" | "Low";
-  status: "Open" | "In-Progress" | "Resolved";
-  dateCreated: string;
-}
-
-const initialCustomers: Customer[] = [
-  { id: "CUST-101", name: "Alhaji Shehu", phone: "08031234567", type: "Individual", branch: "Katsina HQ" },
-  { id: "CUST-102", name: "Katsina Transport Authority", phone: "09012345678", type: "Government", branch: "Katsina HQ", notes: "Fleet of 15 buses pending CNG Conversion" },
-  { id: "CUST-103", name: "Gombe Courier Express", phone: "08176543210", type: "Corporate", branch: "Gombe Hub", notes: "Delivery tricycle logistics partner" }
-];
-
-const initialAppointments: Appointment[] = [
-  { id: "APP-501", customerName: "Bello Lawal", phone: "08033334444", vehicleModel: "Toyota Sienna 2010", serviceType: "CNG Conversion Consultation", date: "2026-07-06", time: "10:30", status: "Scheduled" },
-  { id: "APP-502", customerName: "Amina Yusuf", phone: "07066667777", vehicleModel: "Suzuki Every Bus", serviceType: "Vehicle Diagnostics Service", date: "2026-07-06", time: "14:00", status: "Scheduled" }
-];
-
-const initialTickets: Ticket[] = [
-  { id: "TCK-801", customerName: "Alhaji Shehu", subject: "CNG regulator pressure warning light flashing", priority: "High", status: "Open", dateCreated: "2026-07-05" },
-  { id: "TCK-802", customerName: "Gombe Courier Express", subject: "Tricycle clutch cable replacement inquiry", priority: "Medium", status: "In-Progress", dateCreated: "2026-07-04" }
-];
+import { ERPStore, Customer, Appointment, Ticket } from "./mockData";
 
 export function CRM() {
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
-  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
-  const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   
   const [search, setSearch] = useState("");
   const [section, setSection] = useState<"clients" | "appointments" | "tickets">("clients");
@@ -73,12 +29,16 @@ export function CRM() {
     notes: ""
   });
 
-  // Keep default branch selection updated on branch change
+  // Keep lists and default branch selection updated on branch change
   useEffect(() => {
     const refreshData = () => {
+      setCustomers(ERPStore.getCustomers());
+      setAppointments(ERPStore.getAppointments());
+      setTickets(ERPStore.getTickets());
       setNewClient(prev => ({ ...prev, branch: getActiveBranchDefault() }));
     };
     window.addEventListener("cityview_branch_changed", refreshData);
+    refreshData(); // Fetch initial data on mount
     return () => window.removeEventListener("cityview_branch_changed", refreshData);
   }, []);
 
@@ -103,7 +63,9 @@ export function CRM() {
       branch: newClient.branch,
       notes: newClient.notes
     };
-    setCustomers([...customers, entry]);
+    const updated = [...customers, entry];
+    setCustomers(updated);
+    ERPStore.saveCustomers(updated);
     toast.success("Client Registered", { description: `${newClient.name} added to CRM system.` });
     setNewClient({ name: "", phone: "", type: "Individual", branch: "Katsina HQ", notes: "" });
     setShowClientForm(false);
@@ -119,9 +81,12 @@ export function CRM() {
       serviceType: newAppt.serviceType,
       date: newAppt.date,
       time: newAppt.time,
-      status: "Scheduled"
+      status: "Scheduled",
+      branch: getActiveBranchDefault()
     };
-    setAppointments([...appointments, entry]);
+    const updated = [...appointments, entry];
+    setAppointments(updated);
+    ERPStore.saveAppointments(updated);
     toast.success("Appointment Scheduled", { description: `Booked for ${newAppt.date} at ${newAppt.time}` });
     setShowApptForm(false);
   };
@@ -129,6 +94,7 @@ export function CRM() {
   const resolveTicket = (id: string) => {
     const updated = tickets.map(t => t.id === id ? { ...t, status: "Resolved" as const } : t);
     setTickets(updated);
+    ERPStore.saveTickets(updated);
     toast.success("Ticket Resolved", { description: "CRM issue ticket marked closed." });
   };
 

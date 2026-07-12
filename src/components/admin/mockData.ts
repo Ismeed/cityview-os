@@ -100,6 +100,37 @@ export interface CNGConversionPayment {
   notes?: string;
 }
 
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  type: "Individual" | "Corporate" | "Fleet Owner" | "Government";
+  branch: string;
+  notes?: string;
+}
+
+export interface Appointment {
+  id: string;
+  customerName: string;
+  phone: string;
+  vehicleModel: string;
+  serviceType: string;
+  date: string;
+  time: string;
+  status: "Scheduled" | "Completed" | "Cancelled";
+  branch: string;
+}
+
+export interface Ticket {
+  id: string;
+  customerName: string;
+  subject: string;
+  priority: "High" | "Medium" | "Low";
+  status: "Open" | "In-Progress" | "Resolved";
+  dateCreated: string;
+  branch: string;
+}
+
 export interface CNGConversion {
   id: string;
   customerName: string;
@@ -176,9 +207,25 @@ const initialInventory: InventoryItem[] = [];
 const initialTransactions: Transaction[] = [];
 const initialAuditLogs: AuditLog[] = [];
 
+export const initialCustomers: Customer[] = [
+  { id: "CUST-101", name: "Alhaji Shehu", phone: "08031234567", type: "Individual", branch: "Katsina HQ" },
+  { id: "CUST-102", name: "Katsina Transport Authority", phone: "09012345678", type: "Government", branch: "Katsina HQ", notes: "Fleet of 15 buses pending CNG Conversion" },
+  { id: "CUST-103", name: "Gombe Courier Express", phone: "08176543210", type: "Corporate", branch: "Gombe Hub", notes: "Delivery tricycle logistics partner" }
+];
+
+export const initialAppointments: Appointment[] = [
+  { id: "APP-501", customerName: "Bello Lawal", phone: "08033334444", vehicleModel: "Toyota Sienna 2010", serviceType: "CNG Conversion Consultation", date: "2026-07-06", time: "10:30", status: "Scheduled", branch: "Katsina HQ" },
+  { id: "APP-502", customerName: "Amina Yusuf", phone: "07066667777", vehicleModel: "Suzuki Every Bus", serviceType: "Vehicle Diagnostics Service", date: "2026-07-06", time: "14:00", status: "Scheduled", branch: "Katsina HQ" }
+];
+
+export const initialTickets: Ticket[] = [
+  { id: "TCK-801", customerName: "Alhaji Shehu", subject: "CNG regulator pressure warning light flashing", priority: "High", status: "Open", dateCreated: "2026-07-05", branch: "Katsina HQ" },
+  { id: "TCK-802", customerName: "Gombe Courier Express", subject: "Tricycle clutch cable replacement inquiry", priority: "Medium", status: "In-Progress", dateCreated: "2026-07-04", branch: "Gombe Hub" }
+];
+
 import { getCurrentUser, getAccounts, saveAccounts } from "../../lib/auth";
 
-const DATA_SCHEMA_VERSION = "v10"; // bumped: fixed branch filters and unified credentials store saves
+const DATA_SCHEMA_VERSION = "v11"; // bumped: added CRM tables and database sync key mapping
 const SCHEMA_VERSION_KEY  = "cityview_erp_schema_version";
 
 // On first page load (per browser session), check if the stored schema version
@@ -203,7 +250,10 @@ if (typeof window !== "undefined") {
       "cityview_erp_sync_queue",
       "cityview_auth_session",
       "cityview_auth_accounts",
-      "cityview_user_session"
+      "cityview_user_session",
+      "cityview_erp_customers",
+      "cityview_erp_appointments",
+      "cityview_erp_tickets"
     ];
     KEYS_TO_PURGE.forEach(k => localStorage.removeItem(k));
     localStorage.setItem(SCHEMA_VERSION_KEY, DATA_SCHEMA_VERSION);
@@ -492,6 +542,66 @@ export class ERPStore {
 
   static getUsers = () => getAccounts() as any[];
   static saveUsers = (data: MockUser[]) => saveAccounts(data);
+
+  static getCustomers = () => {
+    const raw = loadLocalStorageData<Customer[]>("cityview_erp_customers", initialCustomers);
+    const branch = getIsolatedBranch();
+    if (!branch) return raw;
+    return raw.filter(c => c.branch === branch);
+  };
+  static saveCustomers = (data: Customer[]) => {
+    const branch = getIsolatedBranch();
+    if (!branch) {
+      saveLocalStorageData("cityview_erp_customers", data);
+      ERPStore.addToSyncQueue("Update CRM Customers", "Updated CRM customer list");
+      return;
+    }
+    const raw = loadLocalStorageData<Customer[]>("cityview_erp_customers", initialCustomers);
+    const otherBranches = raw.filter(c => c.branch !== branch);
+    const tagged = data.map(c => ({ ...c, branch }));
+    saveLocalStorageData("cityview_erp_customers", [...otherBranches, ...tagged]);
+    ERPStore.addToSyncQueue("Update CRM Customers", `Updated CRM customer list for ${branch}`);
+  };
+
+  static getAppointments = () => {
+    const raw = loadLocalStorageData<Appointment[]>("cityview_erp_appointments", initialAppointments);
+    const branch = getIsolatedBranch();
+    if (!branch) return raw;
+    return raw.filter(a => a.branch === branch);
+  };
+  static saveAppointments = (data: Appointment[]) => {
+    const branch = getIsolatedBranch();
+    if (!branch) {
+      saveLocalStorageData("cityview_erp_appointments", data);
+      ERPStore.addToSyncQueue("Update CRM Appointments", "Updated CRM appointments");
+      return;
+    }
+    const raw = loadLocalStorageData<Appointment[]>("cityview_erp_appointments", initialAppointments);
+    const otherBranches = raw.filter(a => a.branch !== branch);
+    const tagged = data.map(a => ({ ...a, branch }));
+    saveLocalStorageData("cityview_erp_appointments", [...otherBranches, ...tagged]);
+    ERPStore.addToSyncQueue("Update CRM Appointments", `Updated CRM appointments for ${branch}`);
+  };
+
+  static getTickets = () => {
+    const raw = loadLocalStorageData<Ticket[]>("cityview_erp_tickets", initialTickets);
+    const branch = getIsolatedBranch();
+    if (!branch) return raw;
+    return raw.filter(t => t.branch === branch);
+  };
+  static saveTickets = (data: Ticket[]) => {
+    const branch = getIsolatedBranch();
+    if (!branch) {
+      saveLocalStorageData("cityview_erp_tickets", data);
+      ERPStore.addToSyncQueue("Update CRM Tickets", "Updated CRM support tickets");
+      return;
+    }
+    const raw = loadLocalStorageData<Ticket[]>("cityview_erp_tickets", initialTickets);
+    const otherBranches = raw.filter(t => t.branch !== branch);
+    const tagged = data.map(t => ({ ...t, branch }));
+    saveLocalStorageData("cityview_erp_tickets", [...otherBranches, ...tagged]);
+    ERPStore.addToSyncQueue("Update CRM Tickets", `Updated CRM support tickets for ${branch}`);
+  };
 }
 
 export interface MockUser {
