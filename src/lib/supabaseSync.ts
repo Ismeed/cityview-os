@@ -94,13 +94,13 @@ const KEY_MAPS: Record<string, Record<string, string>> = {
     "passwordHash": "password_hash"
   },
   "crm_appointments": {
-    "customerName": "customer_name",
-    "vehicleModel": "vehicle_model",
-    "serviceType": "service_type"
+    "customerName": "customername",
+    "vehicleModel": "vehiclemodel",
+    "serviceType": "servicetype"
   },
   "crm_tickets": {
-    "customerName": "customer_name",
-    "dateCreated": "date_created"
+    "customerName": "customername",
+    "dateCreated": "datecreated"
   }
 };
 
