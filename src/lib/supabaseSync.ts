@@ -19,87 +19,88 @@ const TABLE_MAP: Record<string, string> = {
   "cityview_erp_tickets": "crm_tickets"
 };
 
-// CamelCase frontend keys mapped to lowercase Postgres columns
+// CamelCase frontend keys mapped to snake_case Postgres columns
 const KEY_MAPS: Record<string, Record<string, string>> = {
   "vehicles": {
-    "plateNumber": "platenumber",
-    "fuelType": "fueltype",
-    "conversionStatus": "conversionstatus",
-    "assignedDriverId": "assigneddriverid",
-    "lastServiceDate": "lastservicedate"
+    "plateNumber": "plate_number",
+    "type": "model",
+    "fuelType": "fuel_type",
+    "conversionStatus": "conversion_status",
+    "assignedDriverId": "assigned_driver_id"
   },
   "conversions": {
-    "customerName": "customername",
-    "vehiclePlate": "vehicleplate",
-    "vehicleModel": "vehiclemodel",
-    "cngKitType": "cngkittype",
-    "cylinderSize": "cylindersize",
-    "dateStarted": "datestarted",
-    "dateCompleted": "datecompleted",
-    "paymentType": "paymenttype",
-    "amountPaid": "amountpaid",
-    "paymentStatus": "paymentstatus",
-    "paymentHistory": "paymenthistory"
+    "customerName": "customer_name",
+    "vehiclePlate": "vehicle_plate",
+    "vehicleModel": "vehicle_model",
+    "cngKitType": "cng_kit_type",
+    "cylinderSize": "cylinder_size",
+    "dateStarted": "date_started",
+    "dateCompleted": "date_completed",
+    "paymentType": "payment_type",
+    "amountPaid": "amount_paid",
+    "paymentStatus": "payment_status",
+    "paymentHistory": "payment_history",
+    "assignedEngineers": "assigned_engineers"
   },
   "employees": {
-    "attendanceToday": "attendancetoday",
-    "stateCode": "statecode",
-    "batchGroup": "batchgroup",
-    "durationMonths": "durationmonths"
+    "attendanceToday": "attendance_today",
+    "stateCode": "state_code",
+    "batchGroup": "batch_group",
+    "durationMonths": "duration_months"
   },
   "drivers": {
-    "remittanceRate": "remittancerate",
-    "guarantorName": "guarantorname",
-    "guarantorPhone": "guarantorphone"
+    "remittanceRate": "remittance_rate",
+    "guarantorName": "guarantor_name",
+    "guarantorPhone": "guarantor_phone"
   },
   "shifts": {
-    "driverId": "driverid",
-    "vehicleId": "vehicleid",
-    "shiftType": "shifttype",
-    "startTime": "starttime",
-    "endTime": "endtime",
-    "startMileage": "startmileage",
-    "endMileage": "endmileage",
-    "expectedRemittance": "expectedremittance",
-    "actualRemittance": "actualremittance"
+    "driverId": "driver_id",
+    "vehicleId": "vehicle_id",
+    "shiftType": "shift_type",
+    "startTime": "start_time",
+    "endTime": "end_time",
+    "startMileage": "start_mileage",
+    "endMileage": "end_mileage",
+    "expectedRemittance": "expected_remittance",
+    "actualRemittance": "actual_remittance"
   },
   "hp_contracts": {
-    "driverId": "driverid",
-    "vehicleId": "vehicleid",
-    "totalAmount": "totalamount",
-    "balancePaid": "balancepaid",
-    "dailyTarget": "dailytarget",
-    "startDate": "startdate",
-    "endDateExpected": "enddateexpected",
-    "paymentHistory": "paymenthistory"
+    "driverId": "driver_id",
+    "vehicleId": "vehicle_id",
+    "totalAmount": "total_amount",
+    "balancePaid": "balance_paid",
+    "dailyTarget": "daily_target",
+    "startDate": "start_date",
+    "endDateExpected": "end_date_expected",
+    "paymentHistory": "payment_history"
   },
   "job_cards": {
-    "customerName": "customername",
-    "customerPhone": "customerphone",
-    "vehiclePlate": "vehicleplate",
-    "vehicleModel": "vehiclemodel",
-    "issueDescription": "issuedescription",
-    "assignedTechnicianId": "assignedtechnicianid",
-    "laborCharges": "laborcharges",
-    "partsUsed": "partsused"
+    "customerName": "customer_name",
+    "customerPhone": "customer_phone",
+    "vehiclePlate": "vehicle_plate",
+    "vehicleModel": "vehicle_model",
+    "issueDescription": "issue_description",
+    "assignedTechnicianId": "assigned_technician_id",
+    "laborCharges": "labor_charges",
+    "partsUsed": "parts_used"
   },
   "inventory": {
-    "stockLevel": "stocklevel",
-    "minStockLevel": "minstocklevel",
-    "unitPrice": "unitprice"
+    "stockLevel": "stock_level",
+    "minStockLevel": "min_stock_level",
+    "unitPrice": "unit_price"
   },
   "users": {
-    "branchName": "branchname",
-    "passwordHash": "passwordhash"
+    "branchName": "branch_name",
+    "passwordHash": "password_hash"
   },
   "crm_appointments": {
-    "customerName": "customername",
-    "vehicleModel": "vehiclemodel",
-    "serviceType": "servicetype"
+    "customerName": "customer_name",
+    "vehicleModel": "vehicle_model",
+    "serviceType": "service_type"
   },
   "crm_tickets": {
-    "customerName": "customername",
-    "dateCreated": "datecreated"
+    "customerName": "customer_name",
+    "dateCreated": "date_created"
   }
 };
 
@@ -111,13 +112,16 @@ const isConfigured = () => {
 };
 
 /**
- * Normalizes a row object to database column layout (lowercase keys)
+ * Normalizes a row object to database column layout
  */
 function toDbPayload(tableName: string, row: any): any {
   const map = KEY_MAPS[tableName];
   if (!map) return row;
   const newRow: any = {};
   for (const [key, value] of Object.entries(row)) {
+    // Skip fields that do not exist in the database table to prevent insertion errors
+    if (tableName === "vehicles" && key === "lastServiceDate") continue;
+    
     const dbKey = map[key] || key;
     newRow[dbKey] = value;
   }
@@ -139,6 +143,12 @@ function fromDbPayload(tableName: string, row: any): any {
     const camelKey = revMap[key] || key;
     newRow[camelKey] = value;
   }
+  
+  // Fill fallbacks for fields that exist in frontend but not in the database table
+  if (tableName === "vehicles" && !newRow.lastServiceDate) {
+    newRow.lastServiceDate = new Date().toISOString().split("T")[0];
+  }
+  
   return newRow;
 }
 
