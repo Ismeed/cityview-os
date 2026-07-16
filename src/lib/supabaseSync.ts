@@ -19,6 +19,30 @@ const TABLE_MAP: Record<string, string> = {
   "cityview_erp_tickets": "crm_tickets"
 };
 
+/**
+ * For tables where the primary key is NOT "id", specify it here.
+ * Supabase upsert defaults to the table's PK, so this must match the actual DB primary key.
+ */
+const UPSERT_CONFLICT_KEY: Record<string, string> = {
+  "users": "email"  // users table uses email as primary key, not id
+};
+
+/**
+ * Whitelist of allowed DB column names per table.
+ * Only columns in this list will be included in upsert payloads.
+ * Prevents "column not found" errors when the frontend model has extra fields
+ * not yet in the database schema.
+ * An empty/missing entry means no filtering (all columns are sent).
+ */
+const COLUMN_WHITELIST: Record<string, Set<string>> = {
+  "users": new Set(["email", "name", "role", "department", "branch", "branch_name", "password_hash", "disabled"]),
+  "hp_contracts": new Set(["id", "driver_id", "vehicle_id", "total_amount", "balance_paid", "daily_target", "start_date", "end_date_expected", "status", "payment_history", "branch"]),
+  "vehicles": new Set(["id", "plate_number", "model", "fuel_type", "conversion_status", "branch", "status", "assigned_driver_id"]),
+  "crm_appointments": new Set(["id", "branch", "status", "date", "time", "customername", "vehiclemodel", "servicetype"]),
+  "crm_tickets": new Set(["id", "branch", "status", "subject", "priority", "customername", "datecreated"]),
+  "crm_customers": new Set(["id", "name", "phone", "branch"])
+};
+
 // CamelCase frontend keys mapped to snake_case Postgres columns
 const KEY_MAPS: Record<string, Record<string, string>> = {
   "vehicles": {
@@ -116,13 +140,13 @@ const isConfigured = () => {
  */
 function toDbPayload(tableName: string, row: any): any {
   const map = KEY_MAPS[tableName];
-  if (!map) return row;
+  const whitelist = COLUMN_WHITELIST[tableName];
   const newRow: any = {};
   for (const [key, value] of Object.entries(row)) {
-    // Skip fields that do not exist in the database table to prevent insertion errors
-    if (tableName === "vehicles" && key === "lastServiceDate") continue;
-    
-    const dbKey = map[key] || key;
+    // Apply camelCase -> snake_case renaming
+    const dbKey = map ? (map[key] || key) : key;
+    // If a whitelist is defined for this table, skip columns not on the list
+    if (whitelist && !whitelist.has(dbKey)) continue;
     newRow[dbKey] = value;
   }
   return newRow;
@@ -162,8 +186,12 @@ export async function syncTableToCloud(storageKey: string, data: any[]) {
 
   try {
     const cleaned = data.map(item => toDbPayload(dbTable, item));
+    const conflictKey = UPSERT_CONFLICT_KEY[dbTable];
 
-    const { error } = await supabase.from(dbTable).upsert(cleaned);
+    const { error } = conflictKey
+      ? await supabase.from(dbTable).upsert(cleaned, { onConflict: conflictKey })
+      : await supabase.from(dbTable).upsert(cleaned);
+
     if (error) {
       console.warn(`[Supabase Sync] Upsert failed on table "${dbTable}":`, error.message);
       toast.error(`Database Sync Failed (${dbTable})`, {
