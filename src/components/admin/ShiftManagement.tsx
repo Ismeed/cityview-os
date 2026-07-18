@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
-import { ERPStore, Shift, Driver } from "./mockData";
-import { Plus, Wallet, Calendar, User, FileText, CheckCircle, AlertTriangle, Search } from "lucide-react";
+import { ERPStore, Shift, Driver, Vehicle, HirePurchaseContract } from "./mockData";
+import { Plus, Wallet, Calendar, User, FileText, CheckCircle, AlertTriangle, Search, Filter, ArrowRight, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 
 export function ShiftManagement() {
   const [shifts, setShifts] = useState<Shift[]>(() => ERPStore.getShifts());
   const [drivers, setDrivers] = useState<Driver[]>(() => ERPStore.getDrivers());
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => ERPStore.getVehicles());
+  const [contracts, setContracts] = useState<HirePurchaseContract[]>(() => ERPStore.getHPContracts());
+
+  // Date selection for remittance tracking (defaults to today)
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [search, setSearch] = useState("");
   const [showLogForm, setShowLogForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "PAID" | "PARTIAL" | "UNPAID">("ALL");
+
   const [remittanceForm, setRemittanceForm] = useState({
     driverId: "",
     amount: "",
@@ -15,20 +22,23 @@ export function ShiftManagement() {
     notes: ""
   });
 
-  // Listen for branch changes
+  // Listen for branch changes and sync updates
   useEffect(() => {
     const refreshData = () => {
       setShifts(ERPStore.getShifts());
       setDrivers(ERPStore.getDrivers());
+      setVehicles(ERPStore.getVehicles());
+      setContracts(ERPStore.getHPContracts());
     };
     window.addEventListener("cityview_branch_changed", refreshData);
     return () => window.removeEventListener("cityview_branch_changed", refreshData);
   }, []);
 
-  // Filter drivers list to only active drivers with active contracts
-  const activeContracts = ERPStore.getHPContracts().filter(
+  // Filter active contracts
+  const activeContracts = contracts.filter(
     c => c.status === "Active" || c.status === "Missed Remittance" || c.status === "Defaulted"
   );
+
   const eligibleDrivers = drivers.filter(d => 
     d.status === "Active" && activeContracts.some(c => c.driverId === d.id)
   );
@@ -41,6 +51,16 @@ export function ShiftManagement() {
       driverId,
       amount: contract ? contract.dailyTarget.toString() : ""
     }));
+  };
+
+  const triggerLogForContract = (contract: HirePurchaseContract) => {
+    setRemittanceForm({
+      driverId: contract.driverId,
+      amount: contract.dailyTarget.toString(),
+      date: selectedDate,
+      notes: ""
+    });
+    setShowLogForm(true);
   };
 
   const handleLogRemittance = (e: React.FormEvent) => {
@@ -97,15 +117,19 @@ export function ShiftManagement() {
         const complete = nextBalance >= c.totalAmount;
         const nextStatus = complete ? ("Completed" as const) : isUnderpaid ? ("Missed Remittance" as const) : ("Active" as const);
         
+        // Remove previous entry for same date if any to avoid duplicates
+        const cleanedHistory = (c.paymentHistory || []).filter(p => p.date !== remittanceForm.date);
+
         return {
           ...c,
           balancePaid: Math.min(nextBalance, c.totalAmount),
           status: nextStatus,
-          paymentHistory: [...c.paymentHistory, { date: remittanceForm.date, amount: amountVal }]
+          paymentHistory: [...cleanedHistory, { date: remittanceForm.date, amount: amountVal }]
         };
       }
       return c;
     });
+    setContracts(updatedContracts);
     ERPStore.saveHPContracts(updatedContracts);
 
     // Record Transaction in Ledger
@@ -143,7 +167,40 @@ export function ShiftManagement() {
     setShowLogForm(false);
   };
 
-  // Filtered lists
+  // Process today's compliance for each active contract
+  const activeLeaseItems = activeContracts.map(c => {
+    const driverObj = drivers.find(d => d.id === c.driverId);
+    const vehicleObj = vehicles.find(v => v.id === c.vehicleId);
+    
+    // Find all payment history logs for selectedDate
+    const paymentLogs = c.paymentHistory?.filter(p => p.date === selectedDate) || [];
+    const amountPaid = paymentLogs.reduce((sum, p) => sum + p.amount, 0);
+    
+    const isPaid = amountPaid >= c.dailyTarget;
+    const isPartial = amountPaid > 0 && amountPaid < c.dailyTarget;
+    const status: "PAID" | "PARTIAL" | "UNPAID" = isPaid ? "PAID" : isPartial ? "PARTIAL" : "UNPAID";
+
+    return {
+      contract: c,
+      driver: driverObj,
+      vehicle: vehicleObj,
+      amountPaid,
+      status
+    };
+  }).filter(item => {
+    // Search filter
+    const nameMatch = item.driver?.name.toLowerCase().includes(search.toLowerCase());
+    const idMatch = item.contract.id.toLowerCase().includes(search.toLowerCase());
+    const plateMatch = item.contract.vehicleId.toLowerCase().includes(search.toLowerCase());
+    const searchMatch = nameMatch || idMatch || plateMatch;
+
+    // Status filter
+    const statusMatch = statusFilter === "ALL" || item.status === statusFilter;
+
+    return searchMatch && statusMatch;
+  });
+
+  // Filtered lists for the bottom table (shifts)
   const filteredRemittances = shifts.filter(s => {
     const driverObj = drivers.find(d => d.id === s.driverId);
     const searchLower = search.toLowerCase();
@@ -155,21 +212,37 @@ export function ShiftManagement() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in text-foreground">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
+    <div className="space-y-8 animate-fade-in text-foreground">
+      {/* Tab Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h2 className="font-display text-3xl font-bold text-foreground">Daily Remittance Tracker</h2>
+          <h2 className="font-display text-3xl font-bold text-foreground">Daily Remittance Operations</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Log daily lease remittance payments from drivers, track payment logs, and monitor collection statuses.
+            Track and record daily lease remittances for active contracts, view payment logs, and review collection records.
           </p>
         </div>
-        <button
-          onClick={() => setShowLogForm(!showLogForm)}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-forest px-4 py-2.5 text-xs font-bold text-white hover:bg-forest-deep transition shadow-glow-soft cursor-pointer"
-        >
-          <Plus className="h-4 w-4" />
-          Log Remittance Payment
-        </button>
+
+        {/* Global Date & Search Filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-2xl border border-border bg-white px-4 py-2 text-xs font-semibold">
+            <Calendar className="h-4 w-4 text-emerald" />
+            <span className="text-muted-foreground mr-1">Remittance Date:</span>
+            <input 
+              type="date" 
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-transparent text-foreground focus:outline-none border-none font-mono cursor-pointer"
+            />
+          </div>
+
+          <button
+            onClick={() => setShowLogForm(!showLogForm)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-forest px-4 py-2.5 text-xs font-bold text-white hover:bg-forest-deep transition shadow-glow-soft cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            Manual Entry Form
+          </button>
+        </div>
       </div>
 
       {/* Log Remittance Form */}
@@ -177,7 +250,7 @@ export function ShiftManagement() {
         <form onSubmit={handleLogRemittance} className="rounded-3xl border border-border bg-mist/20 p-6 space-y-4 animate-fade-down max-w-3xl">
           <h4 className="font-display font-bold text-base text-foreground flex items-center gap-2">
             <Wallet className="h-5 w-5 text-forest" />
-            Record Daily Remittance Payment
+            Record Lease Remittance Payment
           </h4>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -233,7 +306,15 @@ export function ShiftManagement() {
           <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
             <button
               type="button"
-              onClick={() => setShowLogForm(false)}
+              onClick={() => {
+                setShowLogForm(false);
+                setRemittanceForm({
+                  driverId: "",
+                  amount: "",
+                  date: new Date().toISOString().split("T")[0],
+                  notes: ""
+                });
+              }}
               className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-white transition cursor-pointer"
             >
               Cancel
@@ -248,12 +329,117 @@ export function ShiftManagement() {
         </form>
       )}
 
-      {/* List Search & History Grid */}
+      {/* Active Leases Remittance Board (The Tracker) */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 className="font-display font-bold text-xl text-foreground">Active Contracts Daily Compliance Tracker</h3>
+            <p className="text-xs text-muted-foreground">List of active hire purchase agreements tracked for date <span className="font-bold text-forest-deep">{selectedDate}</span>.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "ALL", label: "All Leases" },
+              { id: "PAID", label: "Paid" },
+              { id: "PARTIAL", label: "Partial" },
+              { id: "UNPAID", label: "Yet to Remit" }
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setStatusFilter(f.id as any)}
+                className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition cursor-pointer ${
+                  statusFilter === f.id
+                    ? "bg-forest text-white shadow-soft"
+                    : "bg-mist/60 text-muted-foreground hover:bg-mist"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Board table */}
+        <div className="overflow-x-auto border border-border/70 rounded-3xl bg-white shadow-soft">
+          {activeLeaseItems.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground text-xs">
+              No active lease contracts found for this branch matching criteria.
+            </div>
+          ) : (
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-mist/20 border-b border-border/80 font-bold uppercase text-muted-foreground tracking-wider">
+                  <th className="p-4">Driver Profile</th>
+                  <th className="p-4">HP Keke Details</th>
+                  <th className="p-4">Daily Target</th>
+                  <th className="p-4">Received for Date</th>
+                  <th className="p-4">Remittance Status</th>
+                  <th className="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {activeLeaseItems.map(item => {
+                  const driverName = item.driver?.name || "Unknown Driver";
+                  const driverPhone = item.driver?.phone || "—";
+                  
+                  return (
+                    <tr key={item.contract.id} className="hover:bg-mist/5 transition">
+                      <td className="p-4">
+                        <div className="font-semibold text-foreground">{driverName}</div>
+                        <div className="text-[10px] text-muted-foreground font-mono">{item.contract.driverId} (Phone: {driverPhone})</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-semibold text-foreground">{item.vehicle?.plateNumber || item.contract.vehicleId}</div>
+                        <div className="text-[10px] text-muted-foreground font-mono">Contract: {item.contract.id} ({item.vehicle?.model || "Vehicle"})</div>
+                      </td>
+                      <td className="p-4 font-mono font-bold text-charcoal">
+                        ₦{item.contract.dailyTarget.toLocaleString()}
+                      </td>
+                      <td className="p-4 font-mono font-bold text-forest-deep">
+                        ₦{item.amountPaid.toLocaleString()}
+                      </td>
+                      <td className="p-4">
+                        {item.status === "PAID" ? (
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-emerald-soft text-forest-deep border border-emerald/20">
+                            Paid Full
+                          </span>
+                        ) : item.status === "PARTIAL" ? (
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-600 border border-amber-300/30">
+                            Partial Remitted
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-red-100 text-red-500 border border-red-300/30">
+                            Yet to Remit
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        {item.status !== "PAID" ? (
+                          <button
+                            onClick={() => triggerLogForContract(item.contract)}
+                            className="inline-flex items-center gap-1 rounded-xl bg-forest px-3 py-1.5 text-[10px] font-bold text-white hover:bg-forest-deep transition cursor-pointer"
+                          >
+                            <DollarSign className="h-3 w-3" />
+                            Record Remittance
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground font-bold italic mr-2">Paid & Completed</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* History table list */}
       <div className="rounded-3xl border border-border bg-white p-6 shadow-soft space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h4 className="font-display font-bold text-base text-foreground">Remittance Logs History</h4>
-            <p className="text-[11px] text-muted-foreground">Detailed logs of payments submitted by lease drivers.</p>
+            <h4 className="font-display font-bold text-base text-foreground">Logged Remittances Transactions History</h4>
+            <p className="text-[11px] text-muted-foreground">Historical records of daily remittance payment entries registered.</p>
           </div>
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -261,7 +447,7 @@ export function ShiftManagement() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by driver name or log ID..."
+              placeholder="Search by driver name or ID..."
               className="w-full rounded-full border border-border pl-9 pr-4 py-2 text-xs focus:outline-emerald bg-white"
             />
           </div>
@@ -272,20 +458,20 @@ export function ShiftManagement() {
             <thead>
               <tr className="bg-mist/35 border-b border-border/80 font-bold uppercase text-muted-foreground tracking-wider">
                 <th className="p-4">Log ID</th>
-                <th className="p-4">Driver Details</th>
-                <th className="p-4">Leased Vehicle</th>
+                <th className="p-4">Driver Name</th>
+                <th className="p-4">HP Keke ID</th>
                 <th className="p-4">Branch Hub</th>
-                <th className="p-4">Remittance Date</th>
+                <th className="p-4">Payment Date</th>
                 <th className="p-4 text-right">Expected / Paid</th>
                 <th className="p-4 text-center">Status</th>
-                <th className="p-4">Remarks</th>
+                <th className="p-4">Notes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
               {filteredRemittances.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-muted-foreground">
-                    No daily remittance logs recorded.
+                    No daily remittance transaction logs found.
                   </td>
                 </tr>
               ) : (
@@ -300,7 +486,7 @@ export function ShiftManagement() {
                         <div className="font-semibold text-foreground">{driverObj?.name || log.driverId}</div>
                         <div className="text-[10px] text-muted-foreground font-mono">{log.driverId}</div>
                       </td>
-                      <td className="p-4 font-mono text-muted-foreground">{log.vehicleId || "N/A"}</td>
+                      <td className="p-4 font-mono text-muted-foreground">{log.vehicleId || "—"}</td>
                       <td className="p-4 text-muted-foreground">{log.branch}</td>
                       <td className="p-4 font-medium text-foreground">
                         <span className="flex items-center gap-1">

@@ -37,10 +37,6 @@ export function HirePurchase() {
   const [expandedCalendar, setExpandedCalendar] = useState<string | null>(null);
   const [showAllDates, setShowAllDates] = useState<Record<string, boolean>>({});
 
-  // Past Payment Modal State
-  const [paymentRecordModal, setPaymentRecordModal] = useState<{ contract: HirePurchaseContract; dateStr: string } | null>(null);
-  const [pastPaymentAmount, setPastPaymentAmount] = useState<number>(0);
-
   // Helper to calculate expected end date excluding Sundays
   const calculateExpectedEndDate = (startDateStr: string, totalAmount: number, dailyTarget: number) => {
     const daysRequired = Math.ceil(totalAmount / dailyTarget);
@@ -225,68 +221,9 @@ export function HirePurchase() {
     });
   };
 
-  const handleRecordPaymentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!paymentRecordModal) return;
-    
-    const { contract, dateStr } = paymentRecordModal;
-    const amountToRegister = Number(pastPaymentAmount);
 
-    if (amountToRegister <= 0) {
-      toast.error("Invalid Amount", { description: "Please enter a value greater than zero." });
-      return;
-    }
 
-    const newPaymentEntry = { date: dateStr, amount: amountToRegister };
-    const updatedHistory = [...contract.paymentHistory, newPaymentEntry];
-    const newBalance = contract.balancePaid + amountToRegister;
-    const nextStatus = recalculateStatus(contract, newBalance, updatedHistory);
 
-    // Update contract list
-    const updatedContracts = contracts.map(c => {
-      if (c.id === contract.id) {
-        return {
-          ...c,
-          balancePaid: newBalance,
-          status: nextStatus,
-          paymentHistory: updatedHistory
-        };
-      }
-      return c;
-    });
-
-    setContracts(updatedContracts);
-    ERPStore.saveHPContracts(updatedContracts);
-
-    // Record Transaction in general ledger
-    const vehicle = ERPStore.getVehicles().find(v => v.id === contract.vehicleId);
-    const transactions = ERPStore.getTransactions();
-    const newTransaction = {
-      id: `TR-${Date.now().toString().slice(-4)}`,
-      type: "Revenue" as const,
-      amount: amountToRegister,
-      category: "Hire Purchase" as const,
-      description: `Backdated Remittance for ${dateStr} - Contract ${contract.id}`,
-      branch: vehicle?.branch || "Katsina HQ",
-      date: new Date().toISOString().split("T")[0]
-    };
-    ERPStore.saveTransactions([newTransaction, ...transactions]);
-
-    // Audit Log
-    const driverName = ERPStore.getDrivers().find(d => d.id === contract.driverId)?.name || contract.driverId;
-    ERPStore.addAuditLog(
-      "Cashier Desk",
-      "Cashier",
-      "Backdated Remittance",
-      `Recorded historical payment of ₦${amountToRegister.toLocaleString()} for date ${dateStr} (Driver: ${driverName}, Contract: ${contract.id})`
-    );
-
-    toast.success("Past Remittance Logged", {
-      description: `Recorded ₦${amountToRegister.toLocaleString()} for ${dateStr}. Contract progress has been updated.`
-    });
-
-    setPaymentRecordModal(null);
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -512,15 +449,9 @@ export function HirePurchase() {
                                   </span>
 
                                   {!isPaid && (
-                                    <button
-                                      onClick={() => {
-                                        setPaymentRecordModal({ contract, dateStr });
-                                        setPastPaymentAmount(contract.dailyTarget - paid);
-                                      }}
-                                      className="rounded bg-forest hover:bg-forest-deep text-white px-2 py-1 text-[9px] font-bold transition cursor-pointer"
-                                    >
-                                      Record
-                                    </button>
+                                    <span className="text-[10px] font-bold text-muted-foreground/60 italic">
+                                      Not Remitted
+                                    </span>
                                   )}
                                 </div>
                               </div>
@@ -671,77 +602,7 @@ export function HirePurchase() {
           </div>
         );
       })()}
-      {/* Record Past Payment Dialog */}
-      {paymentRecordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl border border-border shadow-elevated w-full max-w-sm overflow-hidden animate-fade-in">
-            <div className="flex items-center justify-between border-b border-border p-5 bg-mist/20">
-              <h3 className="font-display font-bold text-base text-foreground">Record Past Remittance</h3>
-              <button 
-                onClick={() => setPaymentRecordModal(null)} 
-                className="p-1 rounded-lg hover:bg-mist transition text-muted-foreground cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <form onSubmit={handleRecordPaymentSubmit} className="p-6 space-y-4">
-              <div className="bg-mist/30 rounded-2xl p-4 space-y-2 text-xs border border-border/60">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground font-semibold">Contract ID:</span>
-                  <span className="font-bold text-foreground">{paymentRecordModal.contract.id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground font-semibold">Remittance Date:</span>
-                  <span className="font-mono font-bold text-foreground">{paymentRecordModal.dateStr}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground font-semibold">Daily Target:</span>
-                  <span className="font-mono font-bold text-forest-deep">
-                    ₦{paymentRecordModal.contract.dailyTarget.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground font-semibold">Already Paid:</span>
-                  <span className="font-mono font-semibold text-charcoal">
-                    ₦{getDayPayments(paymentRecordModal.contract, paymentRecordModal.dateStr).toLocaleString()}
-                  </span>
-                </div>
-              </div>
 
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                  Amount Received (₦)
-                </label>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  value={pastPaymentAmount}
-                  onChange={(e) => setPastPaymentAmount(Number(e.target.value))}
-                  placeholder="e.g. 12000"
-                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-xs focus:outline-emerald bg-white font-mono font-bold"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t border-border mt-6">
-                <button
-                  type="button"
-                  onClick={() => setPaymentRecordModal(null)}
-                  className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-mist transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-full bg-forest px-5 py-2 text-xs font-semibold text-white hover:bg-forest-deep transition cursor-pointer shadow-glow-soft"
-                >
-                  Submit Payment
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
