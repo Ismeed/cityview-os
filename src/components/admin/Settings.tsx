@@ -41,6 +41,16 @@ export function Settings({ currentUser }: SettingsProps) {
 
   // User Management State
   const [users, setUsers] = useState<MockUser[]>(() => ERPStore.getUsers());
+
+  // Listen for background data sync pull updates to refresh users list dynamically
+  useEffect(() => {
+    const refreshData = () => {
+      setUsers(ERPStore.getUsers());
+    };
+    window.addEventListener("cityview_branch_changed", refreshData);
+    return () => window.removeEventListener("cityview_branch_changed", refreshData);
+  }, []);
+
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newUser, setNewUser] = useState({
     email: "",
@@ -79,14 +89,16 @@ export function Settings({ currentUser }: SettingsProps) {
       return;
     }
 
-    if (passwordState.currentPassword !== currentUser.passwordHash) {
+    const allUsers = ERPStore.getUsers();
+    const dbUser = allUsers.find(u => u.email.toLowerCase() === currentUser.email.toLowerCase());
+
+    if (!dbUser || passwordState.currentPassword !== dbUser.passwordHash) {
       toast.error("Incorrect Password", { description: "The current password you entered is incorrect." });
       return;
     }
 
     setPasswordLoading(true);
     setTimeout(() => {
-      const allUsers = ERPStore.getUsers();
       const updatedUsers = allUsers.map(u => {
         if (u.email.toLowerCase() === currentUser.email.toLowerCase()) {
           return { ...u, passwordHash: passwordState.newPassword };
@@ -99,7 +111,7 @@ export function Settings({ currentUser }: SettingsProps) {
       setUsers(updatedUsers);
 
       // Update current session user in localstorage
-      const updatedUserSession = { ...currentUser, passwordHash: passwordState.newPassword };
+      const updatedUserSession = { ...currentUser };
       localStorage.setItem("cityview_user_session", JSON.stringify(updatedUserSession));
       localStorage.setItem("cityview_auth_session", JSON.stringify(updatedUserSession));
 
@@ -204,6 +216,38 @@ export function Settings({ currentUser }: SettingsProps) {
       ERPStore.addAuditLog(currentUser?.name || "Admin", currentUser?.role || "Super Admin", "Delete User Account", `Permanently deleted email: ${email}`);
       toast.success("Account Deleted", { description: "The login account has been permanently removed from the register." });
     }
+  };
+
+  // Admin: Reset any user password
+  const handleResetUserPassword = (email: string) => {
+    if (!isAdmin) return;
+    const userToReset = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!userToReset) return;
+
+    const newPass = prompt(`Enter new password for ${userToReset.name} (${userToReset.email}):`, "Password123");
+    if (newPass === null) return; // cancelled
+
+    const passwordTrimmed = newPass.trim();
+    if (!passwordTrimmed) {
+      toast.error("Invalid Password", { description: "Password cannot be empty." });
+      return;
+    }
+
+    const updatedUsers = users.map(u => {
+      if (u.email.toLowerCase() === email.toLowerCase()) {
+        return { ...u, passwordHash: passwordTrimmed };
+      }
+      return u;
+    });
+
+    ERPStore.saveUsers(updatedUsers);
+    setUsers(updatedUsers);
+
+    ERPStore.addAuditLog(currentUser?.name || "Admin", currentUser?.role || "Super Admin", "Reset User Password", `Reset password for user email: ${email}`);
+    
+    toast.success("Password Reset Successfully", {
+      description: `New password set for ${userToReset.name}.`
+    });
   };
 
   const handleBackup = () => {
@@ -625,6 +669,13 @@ export function Settings({ currentUser }: SettingsProps) {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleResetUserPassword(user.email)}
+                          className="text-muted-foreground hover:text-amber-500 transition cursor-pointer p-1 rounded hover:bg-muted"
+                          title="Reset Password"
+                        >
+                          <Key className="h-4 w-4" />
+                        </button>
                         {user.email !== currentUser?.email && (
                           <>
                             <button
