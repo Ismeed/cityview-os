@@ -36,7 +36,8 @@ const UPSERT_CONFLICT_KEY: Record<string, string> = {
  */
 const COLUMN_WHITELIST: Record<string, Set<string>> = {
   "users": new Set(["email", "name", "role", "department", "branch", "branch_name", "password_hash", "disabled"]),
-  "hp_contracts": new Set(["id", "driver_id", "vehicle_id", "total_amount", "balance_paid", "daily_target", "start_date", "end_date_expected", "status", "payment_history", "branch"]),
+  // hp_contracts table uses camelCase column names (original schema) — send fields as-is, no renaming
+  "hp_contracts": new Set(["id", "driverId", "vehicleId", "totalAmount", "balancePaid", "dailyTarget", "startDate", "endDateExpected", "status", "paymentHistory", "branch"]),
   "vehicles": new Set(["id", "plate_number", "model", "fuel_type", "conversion_status", "branch", "status", "assigned_driver_id"]),
   "crm_appointments": new Set(["id", "branch", "status", "date", "time", "customername", "vehiclemodel", "servicetype"]),
   "crm_tickets": new Set(["id", "branch", "status", "subject", "priority", "customername", "datecreated"]),
@@ -88,16 +89,9 @@ const KEY_MAPS: Record<string, Record<string, string>> = {
     "expectedRemittance": "expected_remittance",
     "actualRemittance": "actual_remittance"
   },
-  "hp_contracts": {
-    "driverId": "driver_id",
-    "vehicleId": "vehicle_id",
-    "totalAmount": "total_amount",
-    "balancePaid": "balance_paid",
-    "dailyTarget": "daily_target",
-    "startDate": "start_date",
-    "endDateExpected": "end_date_expected",
-    "paymentHistory": "payment_history"
-  },
+  // hp_contracts: NO key remapping — the actual DB columns ARE already camelCase
+  // (driverId, vehicleId, totalAmount, etc. are the original column names with NOT NULL constraints)
+  "hp_contracts": {},
   "job_cards": {
     "customerName": "customer_name",
     "customerPhone": "customer_phone",
@@ -228,9 +222,22 @@ export async function pullAllDataFromCloud(): Promise<boolean> {
         console.warn(`[Supabase Sync] Pull failed for table "${dbTable}":`, error.message);
         continue;
       }
-      
+
       // Map columns back to frontend camelCase casing structure
       const mappedData = (data ?? []).map(item => fromDbPayload(dbTable, item));
+
+      // CRITICAL: Never overwrite existing local data with an empty DB result.
+      // This prevents locally-saved records from being wiped when they haven't
+      // synced to Supabase yet (e.g. due to schema mismatch or network error).
+      if (mappedData.length === 0) {
+        const existingLocal = localStorage.getItem(storageKey);
+        if (existingLocal && existingLocal !== "[]" && existingLocal !== "null") {
+          console.info(`[Supabase Sync] DB returned empty for "${dbTable}" but local data exists — preserving local.`);
+          successCount++;
+          continue;
+        }
+      }
+
       localStorage.setItem(storageKey, JSON.stringify(mappedData));
       successCount++;
     } catch (err) {
