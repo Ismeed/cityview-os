@@ -211,12 +211,22 @@ export function WorkshopConversions() {
     if (idx === -1 || idx === stepsOrder.length - 1) return;
 
     const nextStep = stepsOrder[idx + 1];
+    let blocked = false;
+    let outstandingAmt = 0;
 
     const updated = conversions.map(c => {
       if (c.id === id) {
-        const entry = { ...c, status: nextStep };
         if (nextStep === "Handed Over") {
-          entry.dateCompleted = new Date().toISOString().split("T")[0];
+          // If installment payment, check if it's fully paid.
+          // Block handover if there is still an outstanding balance.
+          if (c.paymentType === "Installment" && (c.amountPaid || 0) < c.cost) {
+            blocked = true;
+            outstandingAmt = c.cost - (c.amountPaid || 0);
+            return c;
+          }
+
+          const entry = { ...c, status: nextStep };
+          entry.dateCompleted = new Date().toISOString().slice(0, 16).replace("T", " ");
 
           // Trigger revenue log in transactions for the remaining unpaid balance
           const remainingBalance = c.paymentType === "Full" ? c.cost : (c.cost - (c.amountPaid || 0));
@@ -241,7 +251,7 @@ export function WorkshopConversions() {
                 ...(c.paymentHistory || []),
                 {
                   id: `PMT-${Date.now().toString().slice(-4)}`,
-                  date: new Date().toISOString().split("T")[0],
+                  date: new Date().toISOString().slice(0, 16).replace("T", " "),
                   amount: remainingBalance,
                   paymentMethod: "Bank Transfer",
                   notes: "Final payout at handover"
@@ -257,11 +267,20 @@ export function WorkshopConversions() {
             const updatedVeh = fleetVehicles.map(v => v.plateNumber === c.vehiclePlate ? { ...v, conversionStatus: "Converted" as const, fuelType: "CNG" as const, status: "Available" as const } : v);
             ERPStore.saveVehicles(updatedVeh);
           }
+          return entry;
         }
-        return entry;
+        return { ...c, status: nextStep };
       }
       return c;
     });
+
+    if (blocked) {
+      toast.error("Handover Blocked", {
+        description: `Installment plan is incomplete. Outstanding balance of ₦${outstandingAmt.toLocaleString()} must be cleared first.`,
+        duration: 6000
+      });
+      return;
+    }
 
     setConversions(updated);
     ERPStore.saveConversions(updated);

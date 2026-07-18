@@ -36,12 +36,17 @@ const UPSERT_CONFLICT_KEY: Record<string, string> = {
  */
 const COLUMN_WHITELIST: Record<string, Set<string>> = {
   "users": new Set(["email", "name", "role", "department", "branch", "branch_name", "password_hash", "disabled"]),
-  // hp_contracts table uses camelCase column names (original schema) — send fields as-is, no renaming
   "hp_contracts": new Set(["id", "driverId", "vehicleId", "totalAmount", "balancePaid", "dailyTarget", "startDate", "endDateExpected", "status", "paymentHistory", "branch"]),
   "vehicles": new Set(["id", "plate_number", "model", "fuel_type", "conversion_status", "branch", "status", "assigned_driver_id"]),
+  "employees": new Set(["id", "name", "email", "role", "department", "branch", "salary", "status", "attendanceToday", "category", "stateCode", "batchGroup", "institution", "durationMonths"]),
+  "drivers": new Set(["id", "name", "phone", "license", "guarantorName", "guarantorPhone", "branch", "status", "remittanceRate"]),
+  "shifts": new Set(["id", "driverId", "vehicleId", "branch", "shiftType", "startTime", "endTime", "startMileage", "endMileage", "expectedRemittance", "actualRemittance", "status", "notes", "date"]),
+  "job_cards": new Set(["id", "customerName", "customerPhone", "vehiclePlate", "vehicleModel", "issueDescription", "assignedTechnicianId", "laborCharges", "partsUsed", "status", "date", "branch"]),
+  "conversions": new Set(["id", "customer_name", "vehicle_plate", "vehicle_model", "cng_kit_type", "cylinder_size", "cost", "status", "assigned_engineers", "date_started", "date_completed", "payment_type", "amount_paid", "payment_status", "payment_history", "branch"]),
+  "inventory": new Set(["id", "name", "category", "stockLevel", "minStockLevel", "unitPrice", "supplier"]),
+  "crm_customers": new Set(["id", "name", "phone", "type", "branch", "notes"]),
   "crm_appointments": new Set(["id", "branch", "status", "date", "time", "customername", "vehiclemodel", "servicetype"]),
-  "crm_tickets": new Set(["id", "branch", "status", "subject", "priority", "customername", "datecreated"]),
-  "crm_customers": new Set(["id", "name", "phone", "branch"])
+  "crm_tickets": new Set(["id", "branch", "status", "subject", "priority", "customername", "datecreated"])
 };
 
 // CamelCase frontend keys mapped to snake_case Postgres columns
@@ -67,46 +72,12 @@ const KEY_MAPS: Record<string, Record<string, string>> = {
     "paymentHistory": "payment_history",
     "assignedEngineers": "assigned_engineers"
   },
-  "employees": {
-    "attendanceToday": "attendance_today",
-    "stateCode": "state_code",
-    "batchGroup": "batch_group",
-    "durationMonths": "duration_months"
-  },
-  "drivers": {
-    "remittanceRate": "remittance_rate",
-    "guarantorName": "guarantor_name",
-    "guarantorPhone": "guarantor_phone"
-  },
-  "shifts": {
-    "driverId": "driver_id",
-    "vehicleId": "vehicle_id",
-    "shiftType": "shift_type",
-    "startTime": "start_time",
-    "endTime": "end_time",
-    "startMileage": "start_mileage",
-    "endMileage": "end_mileage",
-    "expectedRemittance": "expected_remittance",
-    "actualRemittance": "actual_remittance"
-  },
-  // hp_contracts: NO key remapping — the actual DB columns ARE already camelCase
-  // (driverId, vehicleId, totalAmount, etc. are the original column names with NOT NULL constraints)
+  "employees": {}, // Already camelCase in DB
+  "drivers": {},   // Already camelCase in DB
+  "shifts": {},    // Already camelCase in DB
   "hp_contracts": {},
-  "job_cards": {
-    "customerName": "customer_name",
-    "customerPhone": "customer_phone",
-    "vehiclePlate": "vehicle_plate",
-    "vehicleModel": "vehicle_model",
-    "issueDescription": "issue_description",
-    "assignedTechnicianId": "assigned_technician_id",
-    "laborCharges": "labor_charges",
-    "partsUsed": "parts_used"
-  },
-  "inventory": {
-    "stockLevel": "stock_level",
-    "minStockLevel": "min_stock_level",
-    "unitPrice": "unit_price"
-  },
+  "job_cards": {}, // Already camelCase in DB
+  "inventory": {}, // Already camelCase in DB
   "users": {
     "branchName": "branch_name",
     "passwordHash": "password_hash"
